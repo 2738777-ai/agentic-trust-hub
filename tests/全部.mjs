@@ -30,6 +30,9 @@ for (const [版, 答] of Object.entries(預期)) {
 try { execFileSync(process.execPath, [path.join(根, "tests", "泡泡.mjs")], { encoding: "utf8" }); 驗(true, "泡泡測試全部通過（node tests/泡泡.mjs）"); }
 catch (e) { 驗(false, "泡泡測試有失敗：\n" + e.stdout); }
 
+// 4b 視角（換視角不換事實）
+try { execFileSync(process.execPath, [path.join(根, "tests", "視角.mjs")], { encoding: "utf8" }); 驗(true, "視角測試全部通過（node tests/視角.mjs）"); }
+catch (e) { 驗(false, "視角測試有失敗：\n" + e.stdout); }
 // 5 英文法典：和中文法典翻出來的表一模一樣（連行號都一樣），窮舉每一種組合決定也一樣
 import { 判定 } from "../core/翻譯器.mjs";
 const 英文 = await readFile(path.join(根, "core", "法典.en.txt"), "utf8");

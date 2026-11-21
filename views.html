@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1015">
+<title>萬用插座 視角台</title>
+<link rel="stylesheet" href="web/視角台.css">
+<link rel="modulepreload" href="web/核心包.js">
+</head>
+<body>
+<main class="台">
+  <header class="頭">
+    <div class="頂列">
+      <div><div class="小標" data-字="小標">萬用插座 · 視角台</div><h1 data-字="標題">同一次檢查，換角度看駭客怎麼跑</h1></div>
+      <button id="換語言" class="換語言" type="button">English</button>
+    </div>
+    <nav class="導航"><a href="index.html" data-字="去正面">正面</a><a href="side.html" data-字="去側面">側面</a><span data-字="這裡">視角台</span></nav>
+  </header>
+
+  <section class="面板">
+    <div class="面板頭"><span data-字="選版本">網站版本</span><span id="載入" class="載入" data-字="載入中">檢查工具下載中…</span></div>
+    <div id="版本們" class="晶片們" role="radiogroup" data-標籤="選版本" aria-label="網站版本"></div>
+  </section>
+
+  <nav id="視角們" class="分頁" role="tablist" data-標籤="選視角" aria-label="視角"></nav>
+
+  <section class="面板 主面板" aria-live="polite">
+    <div class="面板頭"><span id="視角問題"></span><span id="決定章" class="決定章"></span></div>
+    <div id="畫布" class="畫布"><p class="淡" data-字="等">選一個版本。</p></div>
+  </section>
+
+  <section class="面板 規矩">
+    <p data-字="規矩">每個視角只拿得到<b>視角法典</b>登記的欄位，而且決定一定和紀錄一樣；偷換決定的視角會被守衛擋下。換視角，不換事實。</p>
+  </section>
+</main>
+<script type="module" src="web/視角台.mjs"></script>
+</body>
+</html>

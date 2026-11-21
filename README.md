@@ -3,7 +3,7 @@
 **把開放代理網路上各種信任檢查工具的結果，用一張白話法典合成一個決定。**
 *One plain-language law table that combines the verdicts of independent trust checkers for the Open Agentic Web into a single decision.*
 
-試打台（手機也能開）：https://2738777-ai.github.io/agentic-trust-hub/ ｜ 側面：https://2738777-ai.github.io/agentic-trust-hub/side.html
+試打台（手機也能開）：https://2738777-ai.github.io/agentic-trust-hub/ ｜ 側面：https://2738777-ai.github.io/agentic-trust-hub/side.html ｜ 視角台：https://2738777-ai.github.io/agentic-trust-hub/views.html
 
 **English:** https://2738777-ai.github.io/agentic-trust-hub/?lang=en — start with the *One-minute tour* card (three buttons, each does one step for you).
 
@@ -54,11 +54,23 @@ C：只看簽章會被騙。D：只看指令只會「待審」。兩個接在一
 
 老實說：如果有人能把**所有**紀錄連同總鏈一起重算，光靠自己對自己是抓不到的。要把最後的總鏈值放到外面（例如公開在網頁上或請第三方簽章），才算真的定住。
 
+### 視角台：同一次檢查，換角度看駭客怎麼跑
+
+`views.html` 把同一份執行紀錄拆成四個視角：
+
+- **駭客**：和正常版本逐欄比對，抓出駭客動了哪裡（連人眼看不到的隱形字都標出來），每個工具是「抓到、被騙、起疑、沒事」。
+- **地圖**：訊號走哪條路。紅點是駭客動過的訊號，被擋下就停在檢查站；騙過檢查的變黃點，一路溜到法典。
+- **矩陣**：五個版本 × 只靠一個工具 × 合起來。虛線框＝只靠那個工具就會放過。
+- **時間**：每顆泡泡一條泳道，紫線是因果扣環（子泡泡接在父泡泡哪一步之後）。
+
+規矩先寫在 `core/視角法典.mjs`：每個視角只准讀登記的欄位，引擎 `core/視角.mjs` 真的只交這些欄位（凍結複本），而且每個視角顯示的決定必須和紀錄一樣，偷換就停。換視角，不換事實。命令列也能看：`node cli/插座.mjs 視角 examples/C_self_signed 駭客`。
+
 ### 怎麼用
 
 ```bash
 node cli/插座.mjs 法典                              # 檢查法典、窮舉所有組合
 node cli/插座.mjs 檢查 examples/C_self_signed       # 讓兩個工具各看一次，照法典合成決定
+node cli/插座.mjs 視角 examples/C_self_signed 駭客  # 同一次檢查換角度看（駭客、地圖、時間）
 node tests/全部.mjs                                 # 全部測試
 npm install && node tools/打包.mjs                  # 改了 core/ 之後，重新打包網頁用的核心包
 node tools/做示範版本.mjs <官方範例民宿資料夾>          # 重做 5 個示範版本
@@ -93,7 +105,7 @@ The Open Agentic Web lets unknown agents run in your browser. Several community 
 - Adding a checker means adding lines to the law, not code. The translator refuses unknown sentences, contradictions and values not on the scale, and every law change is **exhaustively checked** over all verdict combinations.
 - Measured on five variants of the official guesthouse example: a malicious-but-re-signed network fools the signature check alone; a "harmless" step-limit change only gets *held* by the instruction check alone; combined, both are denied.
 
-Every incoming signal is wrapped in a hash-chained *bubble* at the entry point (provenance + parent link + stamps); a deny verdict cuts the whole causal rope (`side.html`). Run `node tests/全部.mjs` (19/19 pass, including 20 bubble/tamper tests and Chinese/English law equivalence over every combination). Built for the [Open Agentic Web Challenge](https://cognizant-agenticweb.devpost.com/).
+Every incoming signal is wrapped in a hash-chained *bubble* at the entry point (provenance + parent link + stamps); a deny verdict cuts the whole causal rope (`side.html`). `views.html` shows the same run record from four angles — attacker (field-level diff, invisible characters highlighted, which checker was fooled), map (animated tampered signals stop where caught), matrix (would a single checker have let it in?) and timeline (bubble swimlanes with causal buckles). Each view only receives the fields registered in `core/視角法典.mjs`, and a guard stops any view that shows a different decision than the record. Run `node tests/全部.mjs` (20/20 pass, plus 41 view tests and 20 bubble/tamper tests and Chinese/English law equivalence over every combination). Built for the [Open Agentic Web Challenge](https://cognizant-agenticweb.devpost.com/).
 
 ## License
 

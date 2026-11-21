@@ -8,6 +8,7 @@ import { 是英文, 選, 套用, 載入核心 } from "./語言.mjs";
   副: ["正面只看到結果；這裡是剖開的管子：每個從外面進來的訊號，一進門就被包進一個<b>泡泡</b>，一路蓋章、串成因果鏈。",
     "The front only shows the verdict. This is the pipe cut open: every signal that comes in is wrapped in a <b>bubble</b> at the door, stamped at each check, and chained by cause."],
   回正面: ["← 回到正面（試打台）", "← Back to the front"],
+  去視角台: ["視角台 →", "Views →"],
   選標題: ["① 選一個網站版本，看它的訊號怎麼走", "① Pick a version and watch its signals flow"],
   版本標籤: ["網站版本", "Site version"],
   載入中: ["檢查工具下載中（約 100 KB），可以先選版本…", "Downloading the checkers (about 100 KB). You can pick a version now…"],
