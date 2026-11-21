@@ -5,6 +5,8 @@
 
 試打台（手機也能開）：https://2738777-ai.github.io/agentic-trust-hub/ ｜ 側面：https://2738777-ai.github.io/agentic-trust-hub/side.html
 
+**English:** https://2738777-ai.github.io/agentic-trust-hub/?lang=en — start with the *One-minute tour* card (three buttons, each does one step for you).
+
 ---
 
 ## 中文說明
@@ -58,6 +60,7 @@ C：只看簽章會被騙。D：只看指令只會「待審」。兩個接在一
 node cli/插座.mjs 法典                              # 檢查法典、窮舉所有組合
 node cli/插座.mjs 檢查 examples/C_self_signed       # 讓兩個工具各看一次，照法典合成決定
 node tests/全部.mjs                                 # 全部測試
+npm install && node tools/打包.mjs                  # 改了 core/ 之後，重新打包網頁用的核心包
 node tools/做示範版本.mjs <官方範例民宿資料夾>          # 重做 5 個示範版本
 ```
 
@@ -65,11 +68,12 @@ node tools/做示範版本.mjs <官方範例民宿資料夾>          # 重做 5
 
 ### 檔案
 
-- `core/法典.txt`：白話法典（唯一的規則來源）
+- `core/法典.txt`：白話法典（唯一的規則來源）；`core/法典.en.txt` 是英文寫法，測試證明兩份翻出來的表一模一樣
 - `core/翻譯器.mjs`：白話法典 → 表 → 判定 → 窮舉檢查（瀏覽器、命令列共用，不靠外部套件）
 - `core/工具.mjs`：接上的檢查工具，每個只交出一個代碼
 - `cli/插座.mjs`：命令列
-- `index.html`、`web/`：試打台網頁（可以直接改法典看結果）
+- `index.html`、`web/`：試打台網頁（可以直接改法典看結果；右上角切中英，網址加 `?lang=en` 直接英文）
+- `web/核心包.js`：網頁用的核心，由 `tools/打包.mjs` 從 `core/`、`vendor/` 打包壓縮產生，不要手改（測試會檢查它是不是最新的）
 - `examples/`：5 個示範版本（取自官方範例民宿，Apache 2.0）
 - `vendor/`：借用的開源工具原封不動，附原授權（見 [NOTICE](NOTICE)）
 
@@ -85,11 +89,11 @@ node tools/做示範版本.mjs <官方範例民宿資料夾>          # 重做 5
 
 The Open Agentic Web lets unknown agents run in your browser. Several community checkers already exist, each covering one slice (e.g. **Agent Customs** for hidden instructions, **NandaSeal** for tampering and signatures). This hub does not add another checker; it **plugs existing ones together**:
 
-- Every checker's verdict code is mapped onto one scale — *green < yellow < review < deny* — in a plain-language law file (`core/法典.txt`). Worst verdict wins; an unreadable result counts as *deny* (fail closed).
+- Every checker's verdict code is mapped onto one scale — *green < yellow < review < deny* — in a plain-language law file (`core/法典.en.txt`, identical to the Chinese `core/法典.txt` — a test proves both translate to the same table). Worst verdict wins; an unreadable result counts as *deny* (fail closed).
 - Adding a checker means adding lines to the law, not code. The translator refuses unknown sentences, contradictions and values not on the scale, and every law change is **exhaustively checked** over all verdict combinations.
 - Measured on five variants of the official guesthouse example: a malicious-but-re-signed network fools the signature check alone; a "harmless" step-limit change only gets *held* by the instruction check alone; combined, both are denied.
 
-Every incoming signal is wrapped in a hash-chained *bubble* at the entry point (provenance + parent link + stamps); a deny verdict cuts the whole causal rope (`side.html`). Run `node tests/全部.mjs` (12/12 pass, including 20 bubble/tamper tests). Built for the [Open Agentic Web Challenge](https://cognizant-agenticweb.devpost.com/).
+Every incoming signal is wrapped in a hash-chained *bubble* at the entry point (provenance + parent link + stamps); a deny verdict cuts the whole causal rope (`side.html`). Run `node tests/全部.mjs` (19/19 pass, including 20 bubble/tamper tests and Chinese/English law equivalence over every combination). Built for the [Open Agentic Web Challenge](https://cognizant-agenticweb.devpost.com/).
 
 ## License
 

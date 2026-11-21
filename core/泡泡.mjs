@@ -92,23 +92,23 @@ export async function 驗鏈(泡泡們) {
   const 依編號 = Object.fromEntries(泡泡們.map((p) => [p.編號, p]));
   for (const p of 泡泡們) {
     const 第一筆 = p.歷程[0];
-    if (!第一筆) return { 好: false, 位置: `${p.編號} 沒有歷程` };
+    if (!第一筆) return { 好: false, 位置: `${p.編號} 沒有歷程`, 英文: `${p.編號} has no history` };
     let 鏈 = 第一筆.接自;
     if (p.父編號) {
       const 父 = 依編號[p.父編號];
-      if (!父) return { 好: false, 位置: `${p.編號} 的父泡泡 ${p.父編號} 不見了` };
+      if (!父) return { 好: false, 位置: `${p.編號} 的父泡泡 ${p.父編號} 不見了`, 英文: `parent ${p.父編號} of ${p.編號} is missing` };
       const 父的鏈值們 = [父.歷程[0]?.接自, ...父.歷程.map((h) => h.鏈)];
-      if (!父的鏈值們.includes(鏈)) return { 好: false, 位置: `${p.編號} 說自己接在 ${p.父編號} 後面，但父泡泡的歷程裡沒有這個扣環` };
+      if (!父的鏈值們.includes(鏈)) return { 好: false, 位置: `${p.編號} 說自己接在 ${p.父編號} 後面，但父泡泡的歷程裡沒有這個扣環`, 英文: `${p.編號} claims to hang on ${p.父編號}, but that buckle is not in the parent's history` };
     } else if (鏈 !== "0".repeat(16)) {
-      return { 好: false, 位置: `${p.編號} 沒有父泡泡，起點卻不是零` };
+      return { 好: false, 位置: `${p.編號} 沒有父泡泡，起點卻不是零`, 英文: `${p.編號} has no parent but does not start from zero` };
     }
     for (const [i, h] of p.歷程.entries()) {
       const { 鏈: 記的, 接自, ...這次 } = h;
       const 算的 = await 指紋(鏈 + "|" + 穩定字串(這次));
-      if (算的 !== 記的) return { 好: false, 位置: `${p.編號} 第 ${i + 1} 筆（${這次.事件}）對不上` };
+      if (算的 !== 記的) return { 好: false, 位置: `${p.編號} 第 ${i + 1} 筆（${這次.事件}）對不上`, 英文: `${p.編號} record ${i + 1} does not match` };
       鏈 = 算的;
     }
-    if (鏈 !== p.鏈) return { 好: false, 位置: `${p.編號} 最後的鏈值對不上` };
+    if (鏈 !== p.鏈) return { 好: false, 位置: `${p.編號} 最後的鏈值對不上`, 英文: `${p.編號} final chain value does not match` };
   }
   return { 好: true };
 }
@@ -119,13 +119,13 @@ export async function 驗總鏈(池) {
   let 鏈 = "0".repeat(16);
   for (const [i, h] of 池.總歷程.entries()) {
     const p = 依編號[h.編號];
-    if (!p) return { 好: false, 位置: `總歷程第 ${i + 1} 筆指到的 ${h.編號} 不見了` };
-    if (!p.歷程.some((x) => x.鏈 === h.泡泡鏈)) return { 好: false, 位置: `總歷程第 ${i + 1} 筆和 ${h.編號} 的歷程對不上` };
+    if (!p) return { 好: false, 位置: `總歷程第 ${i + 1} 筆指到的 ${h.編號} 不見了`, 英文: `pool record ${i + 1} points to ${h.編號}, which is missing` };
+    if (!p.歷程.some((x) => x.鏈 === h.泡泡鏈)) return { 好: false, 位置: `總歷程第 ${i + 1} 筆和 ${h.編號} 的歷程對不上`, 英文: `pool record ${i + 1} does not match ${h.編號}'s history` };
     鏈 = await 指紋(鏈 + "|" + h.編號 + "|" + h.泡泡鏈);
-    if (鏈 !== h.總鏈) return { 好: false, 位置: `總歷程第 ${i + 1} 筆的總鏈對不上` };
+    if (鏈 !== h.總鏈) return { 好: false, 位置: `總歷程第 ${i + 1} 筆的總鏈對不上`, 英文: `pool record ${i + 1}: total chain does not match` };
   }
-  if (鏈 !== 池.總鏈) return { 好: false, 位置: "最後的總鏈對不上（有東西被刪了）" };
+  if (鏈 !== 池.總鏈) return { 好: false, 位置: "最後的總鏈對不上（有東西被刪了）", 英文: "final total chain does not match (something was deleted)" };
   const 數 = 池.泡泡們.reduce((n, p) => n + p.歷程.length, 0);
-  if (數 !== 池.總歷程.length) return { 好: false, 位置: `泡泡歷程共 ${數} 筆，總歷程卻有 ${池.總歷程.length} 筆` };
+  if (數 !== 池.總歷程.length) return { 好: false, 位置: `泡泡歷程共 ${數} 筆，總歷程卻有 ${池.總歷程.length} 筆`, 英文: `bubbles hold ${數} records but the pool chain has ${池.總歷程.length}` };
   return { 好: true };
 }

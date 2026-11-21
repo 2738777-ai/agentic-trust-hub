@@ -21,6 +21,7 @@ const 壞網路 = 深(原網路); 壞網路.tools[0].function.description += 藏
 const 改步數 = 深(原網路); 改步數.max_steps = 500;
 // 資料夾用英數字（網址比較不會出問題），中文名字放在目錄.json 給畫面用。
 const 中文名 = { A_normal: "Ａ 正常", B_injected: "Ｂ 被偷塞壞指令", C_self_signed: "Ｃ 壞人自己簽章", D_steps_changed: "Ｄ 偷改步數", E_unsigned: "Ｅ 沒有簽章" };
+const 英文 = {"A_normal": ["A  Normal", "Normal, signed"], "B_injected": ["B  Injected instruction", "Someone slipped a bad instruction into the steps (old signature kept)"], "C_self_signed": ["C  Attacker signs it", "The publisher injects a bad instruction and re-signs with a real signature"], "D_steps_changed": ["D  Step limit changed", "Looks harmless: max steps raised from 12 to 500 (burns your money); old signature"], "E_unsigned": ["E  No signature", "Normal, but not signed"]};
 const 版本們 = [
   ["A_normal", 原網路, 正常簽章, "正常、有簽章"],
   ["B_injected", 壞網路, 正常簽章, "別人偷偷在指令裡塞了壞東西（簽章還是舊的）"],
@@ -35,7 +36,7 @@ for (const [名, 網路, 章, 說明] of 版本們) {
   await writeFile(path.join(夾, `${網}.network.json`), JSON.stringify(網路, null, 2));
   await writeFile(path.join(夾, "agent-manifest.json"), JSON.stringify(原描述, null, 2));
   if (章) await writeFile(path.join(夾, "agent-facts.signed.json"), JSON.stringify(章, null, 2));
-  目錄.push({ 名, 中文名: 中文名[名], 說明, 網路: `${網}.network.json`, 有簽章: Boolean(章) });
+  目錄.push({ 名, 中文名: 中文名[名], 說明, 英文名: 英文[名][0], 英文說明: 英文[名][1], 網路: `${網}.network.json`, 有簽章: Boolean(章) });
 }
 await writeFile(path.join(根, "目錄.json"), JSON.stringify(目錄, null, 2));
 console.log(`做好 ${目錄.length} 個版本：${目錄.map((v) => v.名).join("、")}`);

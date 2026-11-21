@@ -6,40 +6,42 @@
 <title>萬用插座 側面：訊號是怎麼進來的</title>
 <link rel="stylesheet" href="web/樣式.css">
 <link rel="stylesheet" href="web/側面.css">
+<link rel="modulepreload" href="web/核心包.js">
 </head>
 <body>
 <main class="頁">
   <header>
-    <h1>萬用插座 <span>側面</span></h1>
-    <p class="副">正面只看到結果；這裡是剖開的管子：每個從外面進來的訊號，一進門就被包進一個<b>泡泡</b>，一路蓋章、串成因果鏈。</p>
-    <p class="副"><a href="index.html">← 回到正面（試打台）</a></p>
+    <div class="頂列"><h1 data-字="標題">萬用插座 <span>側面</span></h1><button id="換語言" class="換語言" type="button">English</button></div>
+    <p class="副" data-字="副">正面只看到結果；這裡是剖開的管子：每個從外面進來的訊號，一進門就被包進一個<b>泡泡</b>，一路蓋章、串成因果鏈。</p>
+    <p class="副"><a href="index.html" data-字="回正面">← 回到正面（試打台）</a></p>
   </header>
 
   <section aria-labelledby="選標題">
-    <h2 id="選標題">① 選一個網站版本，看它的訊號怎麼走</h2>
-    <div id="版本們" class="晶片們" role="radiogroup" aria-label="網站版本"></div>
+    <h2 id="選標題" data-字="選標題">① 選一個網站版本，看它的訊號怎麼走</h2>
+    <div id="版本們" class="晶片們" role="radiogroup" data-標籤="版本標籤" aria-label="網站版本"></div>
+    <p id="載入" class="載入" role="status" data-字="載入中">檢查工具下載中（約 100 KB），可以先選版本…</p>
   </section>
 
   <section aria-labelledby="管標題">
-    <h2 id="管標題">② 管子剖面</h2>
-    <p class="提示">由上往下：門外 → 進門包泡泡 → 每道檢查蓋章 → 法典判定 → 放行或整條繩剪斷。</p>
-    <ol id="管子" class="管子" aria-live="polite"><li class="空">選一個版本就會開始。</li></ol>
+    <h2 id="管標題" data-字="管標題">② 管子剖面</h2>
+    <p class="提示" data-字="管提示">由上往下：門外 → 進門包泡泡 → 每道檢查蓋章 → 法典判定 → 放行或整條繩剪斷。</p>
+    <ol id="管子" class="管子" aria-live="polite"><li class="空" data-字="管空">選一個版本就會開始。</li></ol>
   </section>
 
   <section aria-labelledby="鏈標題">
-    <h2 id="鏈標題">③ 因果鏈</h2>
-    <p class="提示">每顆泡泡記著是誰帶它進來的；每動一次，鏈值就重算。事後改任何一個字都對得出來。</p>
+    <h2 id="鏈標題" data-字="鏈標題">③ 因果鏈</h2>
+    <p class="提示" data-字="鏈提示">每顆泡泡記著是誰帶它進來的；每動一次，鏈值就重算。事後改任何一個字都對得出來。</p>
     <div id="鏈" class="鏈"></div>
     <div class="按鈕列">
-      <button id="竄改章" type="button">試著把一個章改掉</button>
-      <button id="竄改來源" type="button">試著改泡泡的來源</button>
-      <button id="刪泡泡" type="button">試著刪掉最後一顆泡泡</button>
+      <button id="竄改章" type="button" data-字="竄改章">試著把一個章改掉</button>
+      <button id="竄改來源" type="button" data-字="竄改來源">試著改泡泡的來源</button>
+      <button id="刪泡泡" type="button" data-字="刪泡泡">試著刪掉最後一顆泡泡</button>
     </div>
     <p id="驗結果" class="法狀態" role="status"></p>
   </section>
 
   <footer>
-    <p>泡泡的規則寫在 <code>core/泡泡法典.mjs</code>（先寫表，引擎只照表走）；放不放行照 <code>core/法典.txt</code>。</p>
+    <p data-字="腳">泡泡的規則寫在 <code>core/泡泡法典.mjs</code>（先寫表，引擎只照表走）；放不放行照 <code>core/法典.txt</code>。</p>
   </footer>
 </main>
 <script type="module" src="web/側面.mjs"></script>

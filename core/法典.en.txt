@@ -1,0 +1,22 @@
+# Agentic Trust Hub law (plain-language version)
+# One rule per line. Anything after "#" is a comment. Lines the translator cannot read, contradictions, and levels that are not on the scale all STOP it. It never guesses.
+# To plug in a new checker: add lines like "SomeChecker says SOME_CODE → LEVEL". No code changes.
+
+scale: GREEN < YELLOW < REVIEW < DENY
+combine: worst wins
+unreadable: DENY
+
+# Entry check: does the partner site's agent network hide bad instructions? (Agent Customs, Apache 2.0)
+Agent Customs says CLEARED → GREEN
+Agent Customs says CONDITIONS → YELLOW
+Agent Customs says HOLD → REVIEW
+Agent Customs says DENIED → DENY
+Agent Customs says INVALID → DENY
+Agent Customs says UNREADABLE → DENY
+
+# Authenticity check: was the manifest changed, is the signature real? (NandaSeal, MIT)
+NandaSeal says VERIFIED → GREEN
+NandaSeal says MISSING_FACTS → YELLOW
+NandaSeal says EXPIRED → REVIEW
+NandaSeal says TAMPERED → DENY
+NandaSeal says INVALID_SIGNATURE → DENY

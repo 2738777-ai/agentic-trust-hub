@@ -53,3 +53,15 @@ code { font-family: var(--等寬); font-size: 12.5px; background: var(--灰底);
 footer { color: var(--淡); font-size: 13px; margin-top: 20px; }
 footer a { color: inherit; }
 @media (prefers-reduced-motion: no-preference) { .章, .決定 { transition: background .2s, border-color .2s; } }
+
+/* 標題列：右上角中英切換 */
+.頂列 { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.換語言 { flex: none; font: inherit; font-size: 14px; padding: 6px 12px; border-radius: 999px; border: 2px solid var(--墨); background: #fff; color: var(--墨); cursor: pointer; margin-top: 2px; }
+.載入 { margin: 10px 0 0; font-size: 13.5px; color: var(--待審); }
+.載入[hidden] { display: none; }
+
+/* 一分鐘玩法 */
+.導覽 { border: 2px solid var(--墨); }
+.步驟 { margin: 0; padding-left: 22px; display: grid; gap: 10px; font-size: 14.5px; }
+.步驟 li > span { display: block; }
+.小鈕 { display: inline-block; margin-top: 6px; font: inherit; font-size: 14px; padding: 5px 14px; border-radius: 999px; border: 0; background: var(--墨); color: #fff; text-decoration: none; cursor: pointer; }
