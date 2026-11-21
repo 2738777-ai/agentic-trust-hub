@@ -1,0 +1,22 @@
+# 萬用插座法典（白話版）
+# 一行一條。「#」後面是註解。翻譯器看不懂、前後矛盾、對到尺上沒有的格，都會停下來，不猜。
+# 要接新的檢查工具：在下面多寫幾行「某某說 某代碼 → 某格」就好，不用改程式。
+
+尺：綠 < 黃 < 待審 < 拒
+合成：最壞的贏
+讀不到結果：拒
+
+# 進門檢查：夥伴網站的代理指令裡，有沒有藏壞東西（Agent Customs，Apache 2.0）
+進門檢查（Agent Customs）說 CLEARED → 綠
+進門檢查（Agent Customs）說 CONDITIONS → 黃
+進門檢查（Agent Customs）說 HOLD → 待審
+進門檢查（Agent Customs）說 DENIED → 拒
+進門檢查（Agent Customs）說 INVALID → 拒
+進門檢查（Agent Customs）說 UNREADABLE → 拒
+
+# 真偽檢查：描述檔有沒有被偷改、簽章是不是真的（NandaSeal，MIT）
+真偽檢查（NandaSeal）說 VERIFIED → 綠
+真偽檢查（NandaSeal）說 MISSING_FACTS → 黃
+真偽檢查（NandaSeal）說 EXPIRED → 待審
+真偽檢查（NandaSeal）說 TAMPERED → 拒
+真偽檢查（NandaSeal）說 INVALID_SIGNATURE → 拒

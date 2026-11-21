@@ -1,0 +1,55 @@
+:root {
+  --底: #f4f1ea; --紙: #fffdf8; --墨: #1f2420; --淡: #5f655f; --線: #d9d3c6;
+  --綠: #1a7f37; --黃: #a87400; --待審: #d35400; --拒: #c62828; --灰: #6b7280;
+  --綠底: #e6f4ea; --黃底: #fff6d6; --待審底: #ffeadb; --拒底: #fde8e8; --灰底: #eceef1;
+  --字: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --等寬: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--底); color: var(--墨); font: 16px/1.6 var(--字); }
+.頁 { max-width: 680px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 40px max(16px, env(safe-area-inset-left)); }
+header { padding: 8px 0 4px; }
+h1 { font-size: 26px; margin: 0; letter-spacing: .04em; }
+h1 span { color: var(--待審); }
+.副 { margin: 6px 0 0; color: var(--淡); }
+h2 { font-size: 18px; margin: 28px 0 6px; }
+.提示 { margin: 0 0 10px; color: var(--淡); font-size: 14px; }
+section { background: var(--紙); border: 1px solid var(--線); border-radius: 14px; padding: 4px 14px 14px; margin-top: 14px; }
+section h2 { margin-top: 12px; }
+
+.版本們 { display: grid; gap: 8px; }
+.版本 { text-align: left; font: inherit; color: inherit; background: #fff; border: 2px solid var(--線); border-radius: 12px; padding: 10px 12px; cursor: pointer; }
+.版本 b { display: block; font-size: 16px; }
+.版本 small { display: block; color: var(--淡); font-size: 13.5px; line-height: 1.5; }
+.版本[aria-checked="true"] { border-color: var(--墨); box-shadow: 0 0 0 2px var(--墨) inset; }
+.版本:focus-visible, button:focus-visible, textarea:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+
+.章們 { display: grid; gap: 8px; }
+.章 { border-radius: 12px; padding: 10px 12px; border: 2px solid var(--色); background: var(--底色); }
+.章 .器 { font-size: 13.5px; color: var(--淡); }
+.章 .碼 { font-weight: 700; font-size: 17px; }
+.章 .碼 em { font-style: normal; font-family: var(--等寬); font-size: 13px; color: var(--淡); font-weight: 400; margin-left: 4px; }
+.章 .格 { float: right; font-weight: 700; color: var(--色); font-size: 17px; }
+.章 .行 { font-size: 13px; color: var(--淡); }
+.章 .細 { font-size: 13px; color: var(--淡); margin-top: 4px; overflow-wrap: anywhere; }
+.章 .細 summary { cursor: pointer; }
+
+.決定 { margin-top: 12px; border-radius: 14px; padding: 14px; text-align: center; border: 3px solid var(--色); background: var(--底色); }
+.決定 .大 { font-size: 34px; font-weight: 800; color: var(--色); letter-spacing: .1em; }
+.決定 .小 { color: var(--墨); font-size: 14.5px; }
+
+textarea { width: 100%; font: 13.5px/1.55 var(--等寬); background: #fbfaf6; color: var(--墨); border: 1px solid var(--線); border-radius: 10px; padding: 10px; resize: vertical; }
+.按鈕列 { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+button { font: inherit; border-radius: 10px; border: 1px solid var(--線); background: #fff; padding: 9px 14px; cursor: pointer; color: var(--墨); }
+button.主 { background: var(--墨); color: #fff; border-color: var(--墨); }
+.法狀態 { margin: 8px 0 0; font-size: 14px; }
+.法狀態.好 { color: var(--綠); }
+.法狀態.壞 { color: var(--拒); font-weight: 700; }
+
+.說明 ul { margin: 0; padding-left: 20px; color: var(--墨); font-size: 14.5px; }
+.說明 li { margin: 6px 0; }
+code { font-family: var(--等寬); font-size: 12.5px; background: var(--灰底); padding: 1px 4px; border-radius: 4px; overflow-wrap: anywhere; }
+footer { color: var(--淡); font-size: 13px; margin-top: 20px; }
+footer a { color: inherit; }
+@media (prefers-reduced-motion: no-preference) { .章, .決定 { transition: background .2s, border-color .2s; } }

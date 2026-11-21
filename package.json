@@ -1,0 +1,13 @@
+{
+  "name": "agentic-trust-hub",
+  "version": "0.1.0",
+  "description": "萬用插座：把開放代理網路上各種信任檢查工具的結果，用一張白話法典合成一個決定。",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "test": "node tests/全部.mjs",
+    "law": "node cli/插座.mjs 法典",
+    "examples": "node tools/做示範版本.mjs"
+  },
+  "engines": { "node": ">=20" }
+}

@@ -1,0 +1,31 @@
+{
+  "claims": {
+    "schema": "nanda-seal/agent-facts/v1",
+    "spec_profile": "worldwide-agentic-web-mvp-0.3",
+    "site_origin": "https://inspect.local",
+    "publisher": "Tidewhistle Guesthouse (demo copy)",
+    "issued_at": "2026-11-21T05:35:14.346Z",
+    "expires_at": "2026-12-21T05:35:14.346Z",
+    "network_name": "tidewhistle_guesthouse",
+    "front_man": "tidewhistle_assistant",
+    "manifest_sha256": "2487d40723fa497bd28437ede66a2fecf14f4e629f2f0e983eec278170b9c6e7",
+    "network_sha256": "43c112154958c3394787087836ebf41ca3a071a0d5fe1f8076c7353acefc6d39",
+    "peer_policy_mode": "closed",
+    "allowed_peers": [
+      "http://[::1]:8083",
+      "http://localhost:8081"
+    ],
+    "key_fingerprint": "sha256:aee12c446b3c663111fd68a2db59177b"
+  },
+  "proof": {
+    "alg": "ES256",
+    "type": "WebCrypto-ECDSA-P256-SHA256",
+    "public_key_jwk": {
+      "kty": "EC",
+      "x": "lx0TafxjnY7jL5qx2JAikV4tOjbhOkQbil29w6iGwZ0",
+      "y": "CKPL-HbXNraLlQkxwuDZW-jlKXKWqmFNQiP0KEo3X40",
+      "crv": "P-256"
+    },
+    "signature_b64url": "A-iM-qYS9MSHQy0-y9cEdaHL1rTbSbzW_ux44HvSboMjQj7T0apMLCyUgCCY9r-tcjIZu3ITgi4h_D89RVquNw"
+  }
+}

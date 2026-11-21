@@ -1,0 +1,37 @@
+[
+  {
+    "名": "A_normal",
+    "中文名": "Ａ 正常",
+    "說明": "正常、有簽章",
+    "網路": "tidewhistle_guesthouse.network.json",
+    "有簽章": true
+  },
+  {
+    "名": "B_injected",
+    "中文名": "Ｂ 被偷塞壞指令",
+    "說明": "別人偷偷在指令裡塞了壞東西（簽章還是舊的）",
+    "網路": "tidewhistle_guesthouse.network.json",
+    "有簽章": true
+  },
+  {
+    "名": "C_self_signed",
+    "中文名": "Ｃ 壞人自己簽章",
+    "說明": "發布者自己塞壞指令，還重新簽了真的章",
+    "網路": "tidewhistle_guesthouse.network.json",
+    "有簽章": true
+  },
+  {
+    "名": "D_steps_changed",
+    "中文名": "Ｄ 偷改步數",
+    "說明": "看起來無害：把最多步數從 12 偷改成 500（燒你的錢），簽章是舊的",
+    "網路": "tidewhistle_guesthouse.network.json",
+    "有簽章": true
+  },
+  {
+    "名": "E_unsigned",
+    "中文名": "Ｅ 沒有簽章",
+    "說明": "正常，但沒有簽章",
+    "網路": "tidewhistle_guesthouse.network.json",
+    "有簽章": false
+  }
+]

@@ -1,0 +1,19 @@
+萬用插座 Agentic Trust Hub
+Copyright 2026 2738777-ai
+
+本專案以 Apache License 2.0 釋出。以下借用的元件原封不動放在 vendor/ 與 examples/，各自保留原授權：
+
+1. Agent Customs — vendor/agent-customs/customs/
+   Copyright 2026 Monty Bagati — Apache License 2.0（vendor/agent-customs/LICENSE.md）
+   來源：https://github.com/montbaga/agent-customs （commit 63406cc9ff2bb126ba71e0a28e0d62bb1ffcc838）
+
+2. 開放代理網路執行環境（Agent Customs 所附）— vendor/agent-customs/runtime/
+   來源：https://github.com/cognizant-ai-labs/agentic-web — Apache License 2.0（vendor/agent-customs/runtime/LICENSE.txt）
+
+3. NandaSeal — vendor/nanda-seal/crypto-seal.js
+   Copyright (c) 2026 Luu Quoc Trung (@cocvn157) — MIT License（vendor/nanda-seal/LICENSE）
+   來源：https://github.com/cocvn157/nanda-seal （commit 72c463d4dcb9a70dd8f8786e7d451fb24614cd38）
+
+4. 示範網站描述檔 — examples/*/tidewhistle_guesthouse.network.json、agent-manifest.json
+   取自開放代理網路官方範例 guesthouse_agentified，Apache License 2.0（examples/LICENSE-agentic-web.txt）
+   B、C、D 三個版本是故意改壞的示範，不是原作者的內容。
