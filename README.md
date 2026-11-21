@@ -3,7 +3,7 @@
 **把開放代理網路上各種信任檢查工具的結果，用一張白話法典合成一個決定。**
 *One plain-language law table that combines the verdicts of independent trust checkers for the Open Agentic Web into a single decision.*
 
-試打台（手機也能開）：https://2738777-ai.github.io/agentic-trust-hub/
+試打台（手機也能開）：https://2738777-ai.github.io/agentic-trust-hub/ ｜ 側面：https://2738777-ai.github.io/agentic-trust-hub/side.html
 
 ---
 
@@ -37,6 +37,20 @@
 | E 正常但沒簽章 | 放行 | 沒有簽章 | **黃** |
 
 C：只看簽章會被騙。D：只看指令只會「待審」。兩個接在一起才補起來。
+
+### 側面：訊號是怎麼進來的
+
+正面（[試打台](index.html)）只看到結果；[側面](side.html)把管子剖開：
+
+1. 每個從外面進來的訊號（代理網路描述檔、網站描述檔、簽章檔），**一進門就包進一顆泡泡**：記下從哪裡來、是誰帶進來的、內容指紋。
+2. 後進來的泡泡掛在帶它進來的那顆泡泡的**繩**上，扣環就是父泡泡當下的鏈值。
+3. 每道檢查在泡泡上**蓋章**；章只能往上加。每動一次，鏈值重算一次。
+4. 法典把整條繩上的章一起判，最壞的贏；判「拒」就**整條繩剪斷**，之後同一條繩上再進來的訊號一進門就被擋。
+5. 整條管子還有一個**總鏈**，照順序串起每一件事。事後改一個章、改來源、偽造父子關係、整顆泡泡刪掉，都抓得到（`tests/泡泡.mjs` 20/20）。
+
+泡泡的規則先寫在 `core/泡泡法典.mjs`（狀態×事件的轉移表＋規矩，附窮舉檢查器和咬人測試），引擎 `core/泡泡.mjs` 只照表走。
+
+老實說：如果有人能把**所有**紀錄連同總鏈一起重算，光靠自己對自己是抓不到的。要把最後的總鏈值放到外面（例如公開在網頁上或請第三方簽章），才算真的定住。
 
 ### 怎麼用
 
@@ -75,7 +89,7 @@ The Open Agentic Web lets unknown agents run in your browser. Several community 
 - Adding a checker means adding lines to the law, not code. The translator refuses unknown sentences, contradictions and values not on the scale, and every law change is **exhaustively checked** over all verdict combinations.
 - Measured on five variants of the official guesthouse example: a malicious-but-re-signed network fools the signature check alone; a "harmless" step-limit change only gets *held* by the instruction check alone; combined, both are denied.
 
-Run `node tests/全部.mjs` (11/11 pass). Built for the [Open Agentic Web Challenge](https://cognizant-agenticweb.devpost.com/).
+Every incoming signal is wrapped in a hash-chained *bubble* at the entry point (provenance + parent link + stamps); a deny verdict cuts the whole causal rope (`side.html`). Run `node tests/全部.mjs` (12/12 pass, including 20 bubble/tamper tests). Built for the [Open Agentic Web Challenge](https://cognizant-agenticweb.devpost.com/).
 
 ## License
 

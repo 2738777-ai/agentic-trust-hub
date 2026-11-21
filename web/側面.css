@@ -1,0 +1,33 @@
+.晶片們 { display: flex; flex-wrap: wrap; gap: 6px; }
+.晶片 { font: inherit; font-size: 14px; border: 2px solid var(--線); background: #fff; border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.晶片[aria-checked="true"] { border-color: var(--墨); background: var(--墨); color: #fff; }
+
+/* 管子：左邊一根直管，每一站是管子上的一個環 */
+.管子 { list-style: none; margin: 6px 0 0; padding: 0 0 0 34px; position: relative; }
+.管子::before { content: ""; position: absolute; left: 12px; top: 4px; bottom: 4px; width: 12px; border-radius: 6px;
+  background: linear-gradient(90deg, #b8bdb6, #e9ece7 45%, #9aa19a); box-shadow: inset 0 0 0 1px #8a918a; }
+.管子 .空 { color: var(--淡); font-size: 14px; }
+.站 { position: relative; margin: 0 0 12px; opacity: 0; transform: translateY(-6px); }
+.站.到了 { opacity: 1; transform: none; transition: opacity .35s, transform .35s; }
+.站::before { content: ""; position: absolute; left: -29px; top: 6px; width: 20px; height: 8px; border-radius: 4px;
+  background: var(--環, #6b7280); box-shadow: 0 0 0 2px #fff; }
+.站 .站名 { font-weight: 700; font-size: 15px; }
+.站 .站說 { font-size: 13.5px; color: var(--淡); }
+
+.泡泡 { display: inline-flex; flex-direction: column; gap: 1px; margin: 6px 6px 0 0; padding: 6px 12px; border-radius: 18px;
+  background: radial-gradient(circle at 25% 20%, #ffffffee, var(--泡底, #e8f0ff) 70%); border: 2px solid var(--泡框, #7aa2e3);
+  box-shadow: 0 2px 6px #0000001a; font-size: 13px; max-width: 100%; }
+.泡泡 b { font-size: 14px; }
+.泡泡 .指 { font-family: var(--等寬); font-size: 11.5px; color: var(--淡); overflow-wrap: anywhere; }
+.泡泡.斷 { text-decoration: line-through; opacity: .75; }
+.章印 { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 6px; font-weight: 700; font-size: 12.5px; color: var(--色); border: 1.5px solid var(--色); background: var(--底色); }
+
+/* 因果鏈：一層一層縮排 */
+.鏈 { font-size: 13.5px; }
+.鏈節 { margin: 4px 0; padding: 6px 10px; border-left: 3px solid var(--線); background: #fbfaf6; border-radius: 0 8px 8px 0; }
+.鏈節 .指 { font-family: var(--等寬); font-size: 11.5px; color: var(--淡); overflow-wrap: anywhere; }
+.鏈節.子 { margin-left: 18px; }
+.鏈節.孫 { margin-left: 36px; }
+.總鏈 { margin-top: 8px; font-size: 13px; }
+.總鏈 code { font-size: 12px; }
+@media (prefers-reduced-motion: reduce) { .站, .站.到了 { opacity: 1; transform: none; transition: none; } }

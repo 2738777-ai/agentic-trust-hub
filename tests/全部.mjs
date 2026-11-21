@@ -26,5 +26,8 @@ for (const [版, 答] of Object.entries(預期)) {
   const 決定 = (出.match(/決定：(\S+)/) || [])[1];
   驗(決定 === 答, `示範 ${版}：預期 ${答}，實際 ${決定}`);
 }
+// 4 泡泡（因果鏈）測試
+try { execFileSync(process.execPath, [path.join(根, "tests", "泡泡.mjs")], { encoding: "utf8" }); 驗(true, "泡泡測試全部通過（node tests/泡泡.mjs）"); }
+catch (e) { 驗(false, "泡泡測試有失敗：\n" + e.stdout); }
 console.log(`\n合計：${過}/${過 + 錯} 通過`);
 process.exit(錯 ? 1 : 0);
