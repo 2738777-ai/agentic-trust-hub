@@ -5,3 +5,4 @@ export * from "../core/工具.mjs";
 export * from "../core/泡泡.mjs";
 export * from "../core/視角法典.mjs";
 export * from "../core/視角.mjs";
+export * from "../core/鬆緊.mjs";

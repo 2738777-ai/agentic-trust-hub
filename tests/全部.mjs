@@ -33,6 +33,11 @@ catch (e) { 驗(false, "泡泡測試有失敗：\n" + e.stdout); }
 // 4b 視角（換視角不換事實）
 try { execFileSync(process.execPath, [path.join(根, "tests", "視角.mjs")], { encoding: "utf8" }); 驗(true, "視角測試全部通過（node tests/視角.mjs）"); }
 catch (e) { 驗(false, "視角測試有失敗：\n" + e.stdout); }
+// 4c 鬆緊（紅隊第 1 招的補丁）、4d 側面掃描
+for (const [檔, 名] of [["鬆緊.mjs", "鬆緊測試"], ["側面.mjs", "側面測試"]]) {
+  try { const o = execFileSync(process.execPath, [path.join(根, "tests", 檔)], { encoding: "utf8" }); 驗(true, `${名}全部通過（${o.trim().split("\n").pop()}）`); }
+  catch (e) { 驗(false, `${名}有失敗：\n` + e.stdout); }
+}
 // 5 英文法典：和中文法典翻出來的表一模一樣（連行號都一樣），窮舉每一種組合決定也一樣
 import { 判定 } from "../core/翻譯器.mjs";
 const 英文 = await readFile(path.join(根, "core", "法典.en.txt"), "utf8");

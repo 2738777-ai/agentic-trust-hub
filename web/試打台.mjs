@@ -15,8 +15,8 @@ const 網名 = "tidewhistle_guesthouse";
   導覽標題: ["一分鐘玩法", "One-minute tour"],
   步1: ["按「Ｃ 壞人自己簽章」：真偽檢查說簽章是真的（綠），只靠它就會放行；進門檢查抓到壞指令（拒）。合起來，最壞的贏：<b>拒</b>。",
     "Pick <b>C — Attacker signs it</b>. The signature checker says the signature is real (GREEN), so on its own it would let the site in. The entry checker finds the injected instruction (DENY). Combined, the worst wins: <b>DENY</b>."],
-  步2: ["改法典一行：把 DENIED 那行從「拒」改成「待審」，同一個網站就變成「待審」。換規則不用改程式；寫錯了，翻譯器會停下來說第幾行。",
-    "Change one line of the law: map DENIED to REVIEW instead of DENY, and the same site becomes REVIEW. No code changes. Write a bad line and the translator stops and tells you which line."],
+  步2: ["改法典一行：把 DENIED 那行從「拒」改成「待審」。這是在放鬆規則，插座會先攔下來，告訴你哪幾格變寬鬆；再按一次「確定放鬆」才生效。換規則不用改程式，但規則不准偷偷變鬆。",
+    "Change one line of the law: map DENIED to REVIEW instead of DENY. That loosens the rules, so the hub stops first and shows which cells got looser; press \"Confirm loosening\" to apply it. No code changes, but rules never loosen silently."],
   步3: ["看側面：每個訊號一進門就被包成泡泡，一路蓋章串成因果鏈；判「拒」整條繩剪斷。再試著竄改紀錄，會被抓到。",
     "Open the side view: every incoming signal is wrapped in a bubble at the door, stamped at each check, and chained by cause. A DENY cuts the whole rope. Then try to tamper with the record — it gets caught."],
   幫我按: ["幫我按", "Do it"], 幫我改: ["幫我改", "Do it"], 帶我去: ["帶我去", "Go"],
@@ -65,18 +65,34 @@ const 新 = (tag, cls, 文) => { const e = document.createElement(tag); if (cls)
 let 核 = null, 原法典 = "", 法 = null, 目錄 = [], 選中 = null, 上次結果 = null;
 const 格字 = (格) => (是英文 && 核 ? 核.英文格(格) : 格);
 
+// 換法典：先翻譯、窮舉；再和現在的法典比鬆緊。放鬆的格子不准偷偷生效，要再按一次（紅隊第 1 招的補丁）
+let 待確認 = null;
 function 換法典(文字) {
   const 狀 = $("法狀態");
   try {
     const 新法 = 核.翻譯(文字);
     const r = 核.窮舉檢查(新法);
     if (r.違反.length) throw new 核.法典錯誤(`窮舉找到 ${r.違反.length} 個違反：${r.違反[0][0]}`, `Exhaustive check found ${r.違反.length} violation(s)`);
+    const 比 = 法 ? 核.比鬆緊(法, 新法) : { 放鬆: [], 收緊: [] };
+    if (比.放鬆.length && 待確認 !== 文字) {
+      待確認 = 文字;
+      const 例 = 比.放鬆.slice(0, 3).map((x) => `${Object.values(x.組).join(選("＋", " + "))}${選("：", ": ")}${格字(x.舊)} → ${格字(x.新)}`).join(選("；", "; "));
+      狀.className = "法狀態 警";
+      狀.textContent = 選(`這份法典讓 ${比.放鬆.length} 格變寬鬆（${例}）。放鬆不會自動生效：看清楚是你自己要改的，再按一次「確定放鬆」。`,
+        `This law loosens ${比.放鬆.length} cell(s) (${例}). Loosening never applies silently: if you really meant it, press "Confirm loosening".`);
+      $("重判").textContent = 選("確定放鬆", "Confirm loosening");
+      return false;
+    }
+    待確認 = null; $("重判").textContent = 選("照新法典重判", "Re-judge with this law");
     法 = 新法;
     狀.className = "法狀態 好";
-    狀.textContent = 選(`翻譯成功：${r.工具數} 個檢查工具、${r.規則數} 條規則；窮舉 ${r.組合數} 種組合，違反 0 次。`,
+    const 鬆緊話 = 比.放鬆.length ? 選(`你確認了放鬆 ${比.放鬆.length} 格。`, `You confirmed loosening ${比.放鬆.length} cell(s). `)
+      : 比.收緊.length ? 選(`收緊 ${比.收緊.length} 格，直接生效。`, `Tightened ${比.收緊.length} cell(s), applied right away. `) : "";
+    狀.textContent = 鬆緊話 + 選(`翻譯成功：${r.工具數} 個檢查工具、${r.規則數} 條規則；窮舉 ${r.組合數} 種組合，違反 0 次。`,
       `Translated: ${r.工具數} checkers, ${r.規則數} rules. All ${r.組合數} combinations checked, 0 violations.`);
     return true;
   } catch (e) {
+    待確認 = null; $("重判").textContent = 選("照新法典重判", "Re-judge with this law");
     狀.className = "法狀態 壞";
     狀.textContent = 選("停下來了：" + e.message + "（判定還是用上一份沒問題的法典）",
       "Stopped: " + (e.英文 || e.message) + " (still judging with the last good law)");
@@ -138,12 +154,11 @@ function 跑版本(名) {
 }
 async function 改一行() {
   await 準備好;
+  if (!上次結果) await 跑版本("C_self_signed");
   const 框 = $("法典");
   框.value = 框.value.replace(/(DENIED\s*→\s*)(拒|DENY)/, (_, a, b) => a + (b === "拒" ? "待審" : "REVIEW"));
-  if (換法典(框.value)) {
-    if (!上次結果) await 跑版本("C_self_signed"); else 畫結果();
-  }
-  框.scrollIntoView({ block: "center", behavior: "smooth" });
+  if (換法典(框.value)) 畫結果();   // 這是放鬆：第一次只會攔下來，要再按「確定放鬆」
+  $("法狀態").scrollIntoView({ block: "center", behavior: "smooth" });
 }
 
 // 檢查工具先開始在背景下載，同時畫版本按鈕（只要一個很小的 JSON）
