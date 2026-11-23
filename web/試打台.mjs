@@ -76,7 +76,7 @@ function 換法典(文字) {
     const 比 = 法 ? 核.比鬆緊(法, 新法) : { 放鬆: [], 收緊: [] };
     if (比.放鬆.length && 待確認 !== 文字) {
       待確認 = 文字;
-      const 例 = 比.放鬆.slice(0, 3).map((x) => `${Object.values(x.組).join(選("＋", " + "))}${選("：", ": ")}${格字(x.舊)} → ${格字(x.新)}`).join(選("；", "; "));
+      const 例 = 比.放鬆.slice(0, 3).map((x) => `${Object.values(x.組).join(選("＋", " + "))}${選("：", ": ")}${格字(x.舊)} → ${格字(x.新)}${選(`（${x.原因}）`, ` (${({尺變了:"scale changed",補上新代碼:"new code added",拔掉工具:"checker removed",改寬:"mapped looser"})[x.原因]})`)}`).join(選("；", "; "));
       狀.className = "法狀態 警";
       狀.textContent = 選(`這份法典讓 ${比.放鬆.length} 格變寬鬆（${例}）。放鬆不會自動生效：看清楚是你自己要改的，再按一次「確定放鬆」。`,
         `This law loosens ${比.放鬆.length} cell(s) (${例}). Loosening never applies silently: if you really meant it, press "Confirm loosening".`);

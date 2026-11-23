@@ -4,6 +4,13 @@
 // 只要騙人把一行「拒」改成「綠」貼進去，其他檢查全過（紅隊第 1 招，2026-11-22 實測）。
 import { 判定 } from "./翻譯器.mjs";
 
+// 放鬆的原因（2026-11-23 Gemini 提醒：混在一起，人看不懂為什麼被攔）：
+//   尺變了：同一個代碼對到的格名字沒變，是尺的刻度被改，造成相對位置變寬
+//   補上新代碼：舊法典沒寫這個代碼（照讀不到當最嚴），新法典把它寫成比較寬的格
+//   拔掉工具：新法典少了某個檢查工具，少了一道關卡
+//   改寬：同一個代碼，新法典直接對到比較寬的格
+export const 放鬆原因們 = ["尺變了", "補上新代碼", "拔掉工具", "改寬"];
+
 export function 比鬆緊(舊, 新) {
   const 器們 = [...new Set([...Object.keys(舊.轉接), ...Object.keys(新.轉接)])];
   const 碼們 = (器) => [...new Set([...Object.keys(舊.轉接[器] || {}), ...Object.keys(新.轉接[器] || {}), "沒見過的代碼"])];
@@ -14,16 +21,22 @@ export function 比鬆緊(舊, 新) {
   const 只看 = (法, 組) => Object.fromEntries(Object.entries(組).filter(([器]) => 器 in 法.轉接));
   const 放鬆 = [], 收緊 = [];
   let 組合數 = 0;
+  const 為什麼 = (組, a, b) => {
+    if (Object.keys(舊.轉接).some((器) => !(器 in 新.轉接))) return "拔掉工具";
+    if (Object.entries(組).some(([器, 碼]) => 器 in 舊.轉接 && 器 in 新.轉接 && !(碼 in 舊.轉接[器]) && 碼 in 新.轉接[器])) return "補上新代碼";
+    if (a === b) return "尺變了";
+    return "改寬";
+  };
   const 走 = (i, 組) => {
     if (i === 器們.length) {
       組合數++;
       const a = 判定(舊, 只看(舊, 組)).決定, b = 判定(新, 只看(新, 組)).決定, 差 = 嚴(新, b) - 嚴(舊, a);
-      if (差 < -1e-9) 放鬆.push({ 組, 舊: a, 新: b });
+      if (差 < -1e-9) 放鬆.push({ 組, 舊: a, 新: b, 原因: 為什麼(組, a, b) });
       else if (差 > 1e-9) 收緊.push({ 組, 舊: a, 新: b });
       return;
     }
     for (const c of 碼們(器們[i])) 走(i + 1, { ...組, [器們[i]]: c });
   };
   走(0, {});
-  return { 組合數, 放鬆, 收緊 };
+  return { 組合數, 放鬆, 收緊, 尺有變: JSON.stringify(舊.尺) !== JSON.stringify(新.尺) || 舊.讀不到 !== 新.讀不到 };
 }

@@ -12,7 +12,9 @@ export const 規則們 = [
   { 碼: "藏起來", 說: ["樣式設成不顯示或透明", "styled as not displayed or transparent"], 種: "字" },
   { 碼: "同色字", 說: ["字的顏色跟背景幾乎一樣", "text colour almost equals the background"], 種: "字" },
   { 碼: "小到看不見", 說: ["字小於 4 像素", "text smaller than 4 pixels"], 種: "字" },
-  { 碼: "推到畫面外", 說: ["位置在畫面外面", "positioned off screen"], 種: "字" },
+  { 碼: "推到畫面外", 說: ["位置或字被推到畫面外面", "positioned or indented off screen"], 種: "字" },
+  { 碼: "裁掉或縮成零", 說: ["被裁切、縮成零，或塞進零大小的框", "clipped, scaled to zero, or squeezed into a zero-size box"], 種: "字" },
+  { 碼: "疑似同色", 說: ["背景是圖片，看不出字跟背景差多少", "background is an image, contrast cannot be judged"], 種: "字", 上限: "黃" },
   { 碼: "隱形字", 說: ["含人眼看不到的字元", "contains invisible characters"], 種: "字" },
   { 碼: "只給機器看", 說: ["藏在標籤、標題、替代文字裡", "hidden in a label, title or alt text"], 種: "字" },
   { 碼: "資料送別家", 說: ["表單送到別的網站", "a form posts to another site"], 種: "流向", 格: "拒" },
@@ -36,6 +38,12 @@ export const 例外們 = [
   { 選: "details:not([open]) > :not(summary)", 說: ["折起來的說明，點開就看得到", "collapsed details, visible when opened"] },
 ];
 
+// 例外條件：不是看選擇器，而是看情況（掃描器照名字做）
+// 2026-11-23 Gemini 提醒：正常網站會藏短短一句給讀屏軟體（例如「跳到內容」），那不是壞人。
+export const 例外條件們 = [
+  { 名: "無障礙短提示", 說: ["用裁切或零大小藏起來、短於機器字最短、又不像指令的字：是給讀屏軟體的，不算", "short, non-instruction text hidden by clipping or zero size: a screen-reader hint, not an attack"] },
+];
+
 // 只給機器看的字，短於這個長度不算（像「關閉」「選單」這種按鈕名字）
 export const 機器字最短 = 30;
 
@@ -43,7 +51,9 @@ export function 定格(發現) {
   const 規 = 規則們.find((r) => r.碼 === 發現.碼);
   if (!規) return "拒";
   if (規.種 === "流向") return 規.格;
-  return 像指令.test(發現.內容 || "") ? "拒" : "黃";
+  const 格 = 像指令.test(發現.內容 || "") ? "拒" : "黃";
+  // 上限：看不準的規則（例如背景是圖片）最多判到這一格，寧可提醒、不要誤擋
+  return 規.上限 && 格們.indexOf(格) > 格們.indexOf(規.上限) ? 規.上限 : 格;
 }
 
 export function 判側面(發現們) {
@@ -60,10 +70,12 @@ export function 檢查側面法典() {
     if (!["字", "流向"].includes(r.種)) 問題.push(`${r.碼}：種只能是字或流向`);
     if (r.種 === "流向" && !格們.includes(r.格)) 問題.push(`${r.碼}：流向一定要寫格，而且要在尺上`);
     if (r.說?.length !== 2) 問題.push(`${r.碼}：說明要有中文和英文`);
+    if (r.上限 && !格們.includes(r.上限)) 問題.push(`${r.碼}：上限要在尺上`);
   }
   for (const e of 例外們) if (!e.選 || e.說?.length !== 2) 問題.push("例外要有選擇器和中英說明");
   const 處們 = 掃描範圍.map((x) => x.處);
   if (new Set(處們).size !== 處們.length) 問題.push("掃描範圍重複");
   for (const x of 掃描範圍) if (x.說?.length !== 2) 問題.push(`${x.處}：說明要有中文和英文`);
+  for (const x of 例外條件們) if (!x.名 || x.說?.length !== 2) 問題.push("例外條件要有名字和中英說明");
   return 問題;
 }

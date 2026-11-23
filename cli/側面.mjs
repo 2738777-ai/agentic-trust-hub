@@ -6,7 +6,7 @@ import { readFile, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { 掃描頁面 } from "../core/側面掃描.mjs";
-import { 例外們, 機器字最短, 判側面, 掃描範圍 } from "../core/側面法典.mjs";
+import { 例外們, 例外條件們, 機器字最短, 判側面, 掃描範圍 } from "../core/側面法典.mjs";
 
 const 型別 = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".mjs": "text/javascript",
   ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".woff2": "font/woff2" };
@@ -31,7 +31,7 @@ function 開資料夾(資料夾) {
   return new Promise((ok) => 伺服器.listen(0, "127.0.0.1", () => ok({ 伺服器, 網址: `http://127.0.0.1:${伺服器.address().port}/` })));
 }
 
-export async function 側面掃描(目標, { 例外選擇器 = 例外們.map((e) => e.選), 範圍 = 掃描範圍.map((x) => x.處) } = {}) {
+export async function 側面掃描(目標, { 例外選擇器 = 例外們.map((e) => e.選), 例外條件 = 例外條件們.map((x) => x.名), 範圍 = 掃描範圍.map((x) => x.處) } = {}) {
   let chromium;
   try { ({ chromium } = await import("playwright-core")); }
   catch { throw new Error("要先 npm install（側面掃描需要 playwright-core）"); }
@@ -47,7 +47,7 @@ export async function 側面掃描(目標, { 例外選擇器 = 例外們.map((e)
     await 頁.route("**/*", (r) => (new URL(r.request().url()).origin === 家 ? r.continue() : r.abort()));
     await 頁.goto(網址, { waitUntil: "load", timeout: 30000 });
     await 頁.waitForTimeout(500);
-    const { 發現們, 掃過 } = await 頁.evaluate(掃描頁面, { 範圍, 例外選擇器, 機器字最短 });
+    const { 發現們, 掃過 } = await 頁.evaluate(掃描頁面, { 範圍, 例外選擇器, 例外條件, 機器字最短 });
     const 沒掃到 = 範圍.filter((x) => !掃過.includes(x) && x !== "影子元件");   // 頁面沒有影子元件時本來就不會進去
     if (沒掃到.length) throw new Error("掃描器沒照表做完：" + 沒掃到.join("、"));
     return { 網址: 是網址 ? 網址 : 目標, 掃過, ...判側面(發現們) };

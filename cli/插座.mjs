@@ -46,7 +46,8 @@ try {
     const 新 = 翻譯(await readFile(path.resolve(目標), "utf8"));
     const r = 比鬆緊(法, 新);
     console.log(`窮舉 ${r.組合數} 種組合：放鬆 ${r.放鬆.length} 格、收緊 ${r.收緊.length} 格`);
-    for (const x of r.放鬆) console.log(`  放鬆：${Object.values(x.組).join("＋")}　${x.舊} → ${x.新}`);
+    if (r.尺有變) console.log("注意：尺本身被改了（格數、順序或「讀不到結果」），請先確認這是你要的。");
+    for (const x of r.放鬆) console.log(`  放鬆（${x.原因}）：${Object.values(x.組).join("＋")}　${x.舊} → ${x.新}`);
     console.log(r.放鬆.length ? "有放鬆：不准直接換上，要人看過這些格子、按頭才換。" : "沒有放鬆：可以直接換上。");
     process.exitCode = r.放鬆.length ? 2 : 0;
   } else if (指令 === "掃" && 目標) {
