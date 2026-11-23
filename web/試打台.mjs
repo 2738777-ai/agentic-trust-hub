@@ -12,6 +12,7 @@ const 網名 = "tidewhistle_guesthouse";
     "Plug independent trust checkers together. One <b>plain-language law</b> decides whether a stranger agent's site gets in."],
   去側面: ["看側面：訊號是怎麼進來的 →", "Side view: how each signal gets in →"],
   去視角台: ["視角台：換角度看駭客怎麼跑 →", "Views: watch the attack from different angles →"],
+  去直播: ["▶ 先看 30 秒直播：駭客出手，當場被抓", "▶ Watch the 30-second live demo: an attack, caught on the spot"],
   導覽標題: ["一分鐘玩法", "One-minute tour"],
   步1: ["按「Ｃ 壞人自己簽章」：真偽檢查說簽章是真的（綠），只靠它就會放行；進門檢查抓到壞指令（拒）。合起來，最壞的贏：<b>拒</b>。",
     "Pick <b>C — Attacker signs it</b>. The signature checker says the signature is real (GREEN), so on its own it would let the site in. The entry checker finds the injected instruction (DENY). Combined, the worst wins: <b>DENY</b>."],

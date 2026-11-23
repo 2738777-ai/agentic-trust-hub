@@ -68,3 +68,7 @@ footer a { color: inherit; }
 
 /* 法典放鬆：先攔下來，要再按一次 */
 .法狀態.警 { color: var(--待審); font-weight: 700; padding: 8px 10px; border: 1.5px solid var(--待審); border-radius: 8px; }
+
+/* 直播入口：評審先看戲，再自己玩 */
+.直播鈕 { display: block; text-align: center; font-weight: 800; font-size: 17px; color: #fff; background: #0b1015; border-radius: 12px; padding: 14px 12px; text-decoration: none; box-shadow: 0 0 0 2px var(--墨); }
+.直播鈕:hover { background: #172433; }

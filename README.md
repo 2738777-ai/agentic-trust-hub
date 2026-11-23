@@ -3,9 +3,11 @@
 **把開放代理網路上各種信任檢查工具的結果，用一張白話法典合成一個決定。**
 *One plain-language law table that combines the verdicts of independent trust checkers for the Open Agentic Web into a single decision.*
 
+**先看直播（30 秒，不用按）**：https://2738777-ai.github.io/agentic-trust-hub/show.html
+
 試打台（手機也能開）：https://2738777-ai.github.io/agentic-trust-hub/ ｜ 側面：https://2738777-ai.github.io/agentic-trust-hub/side.html ｜ 視角台：https://2738777-ai.github.io/agentic-trust-hub/views.html
 
-**English:** https://2738777-ai.github.io/agentic-trust-hub/?lang=en — start with the *One-minute tour* card (three buttons, each does one step for you).
+**Start here (30-second live demo, no clicks needed):** https://2738777-ai.github.io/agentic-trust-hub/show.html?lang=en — an AI agent books a guesthouse, an attacker tampers with the site, and the hub catches it on the spot. Then try it yourself: https://2738777-ai.github.io/agentic-trust-hub/?lang=en
 
 ---
 
@@ -78,6 +80,7 @@ C：只看簽章會被騙。D：只看指令只會「待審」。兩個接在一
 - **紅隊第三輪（Gemini，2026-11-23）**：打到幾何藏字（裁切、縮成零、零大小的框、把字推出去），也抓到一次真的誤擋好人：照片上的白字被當成同色字直接判拒。補法：法典加「裁掉或縮成零」「疑似同色」（背景是圖片看不準，最多判黃），例外條件加「無障礙短提示」（讀屏軟體用的短句不算）；放鬆偵測分出四種原因、尺被改單獨亮燈。Gemini 說影子元件的位置會變成未定義，實測不成立。
 - **紅隊第四輪（ChatGPT，2026-11-23）**：打到插座自己的洞——本機資料夾當網站時，`/site` 和 `/site-secret` 開頭一樣，編碼過的 `../` 就讀到隔壁（改成照真實位置比資料夾邊界）；還有內嵌框、送出按鈕改去處、「只看不跑」說過頭（本站程式其實會跑，改成只准讀、寫入擋下列出，另加「不跑程式」模式）、「檢查」判拒還回 0（改成結束碼表：只有綠是 0）。- **紅隊第五輪（Meta AI，2026-11-23）**：它審的是舊版，所以先在現在的程式上重打一次，12 招漏 10 招。最嚴重的是**例外表變後門**：為了不誤擋好人讓「點開就看得到」的地方整塊不掃，壞人就把指令包在折起來的說明裡。現在例外只饒不像指令的字；另補框外裁切、被蓋住、原始碼裡（標頭、結構化資料、範本、隱藏欄位、資料屬性）、關閉影子元件、長編碼字、內嵌物件。法典方面補了「改名騙比例」（尺有任何改動一律要人看）和「看守看守者」（比鬆緊自己算最壞的贏，和判定窮舉對照）。它說的兩點驗證不成立，老實記在工單。它也指出「裝備」說得太滿，說明書已改。
 - **拿自己的網頁測（2026-11-23）**：插座自己的正面、側面被自己判黃——「檢查工具下載中」下載完被藏起來。真實網站到處都是這種字，天天亮黃燈就沒人看了。法典改成：藏起來的字只有像指令或一長串編碼才判拒，其他只記下、判綠。`examples/web_hacked_self` 是同一頁、同一種藏法的對照：真的「下載中」是綠，偷塞的指令是拒。
+- **直播頁（`show.html`）**：評審什麼都不用按，30 秒看完一齣戲：平常好好在跑 → 駭客出手 → 當場被抓 → 金鑰沒出門。每一步判了什麼、誰被騙，都是真的引擎現場算的；可以換三招。做好後拿它自己掃，又抓到一次誤擋：「像指令」只比單字，按鈕上的「Inject an instruction」就被判拒。改成看句子的形狀。
 - 五輪下來的共同結論：**檢查結果要跟「這一個動作、這一刻的內容」綁在一起**，這就是下一步「確認那一下」。
 
 ### 怎麼用

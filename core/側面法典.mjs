@@ -5,8 +5,26 @@
 
 export const 格們 = ["綠", "黃", "待審", "拒"];
 
-// 「像在下指令」：藏起來的字裡出現這些，就當成想指揮代理
-export const 像指令 = /(ignore|instruction|assistant|ai agent|system|send|forward|email|pay with|card number|api key|忽略|指令|轉寄|寄給|金鑰|卡號)/i;
+// 「像在下指令」：看句子的形狀，不看單字（2026-11-23 拿自己的直播頁測出來：
+//   按鈕寫「Inject an instruction」、說明寫「an AI agent books…」，只比單字就把講資安的正常網頁當成攻擊）。
+//   真正的注入有固定形狀，任一種就算：
+//   推翻：叫代理忽略之前的指令／規則
+//   點名：「SYSTEM：」「Assistant：」「AI agents：」「Note to AI…：」這種開頭（要有冒號），或「Assistant instruction」
+//   外送：要把金鑰、卡號、密碼送出去（送出的動詞＋祕密）；名單、訂房資料要「寄到某個網址或信箱」才算（「請把訂房資料寄給我們」是正常客服句）
+//   付款：用存好的卡付錢
+//   中文版：忽略之前的指令、系統／助理冒號、把金鑰卡號密碼寄出去
+export const 像指令 = new RegExp([
+  String.raw`\b(ignore|disregard|forget)\s+(all\s+|any\s+)?(the\s+|your\s+)?(previous|prior|above|earlier|other|system)\s+(instructions?|rules|messages|prompts?)`,
+  String.raw`(^|[^\w])(system|assistant|ai\s+agents?|ai\s+assistants?|agents?|note\s+to\s+ai[\w\s]{0,20})\s*[:：]`,
+  String.raw`\bassistant\s+instructions?\b`,
+  String.raw`\b(send|forward|e-?mail|post|upload|share|leak|transmit)\b[^.]{0,80}?\b(api\s*keys?|card\s*numbers?|passwords?|tokens?|cookies?|credentials|private\s*keys?)`,
+  String.raw`\b(send|forward|e-?mail|post|upload|share|leak|transmit)\b[^.]{0,80}?\b(guest\s*list|booking\s*details)\b[^.]{0,40}?\bto\s+(https?:\/\/|[\w.-]+@[\w-]|[\w-]+\.[a-z]{2,})`,
+  String.raw`\b(api\s*keys?|card\s*numbers?|passwords?|credentials|private\s*keys?)\b[^.]{0,80}?\b(to|at)\s+(https?:\/\/|[\w.-]+@[\w-])`,
+  String.raw`\bpay\s+with\s+(the\s+)?(stored|saved)\s+card`,
+  String.raw`忽略(之前|先前|以上|前面|所有)的?(指令|指示|規則)`,
+  String.raw`(系統|助理|系統提示)\s*[:：]`,
+  String.raw`(把|將)[^。]{0,20}(金鑰|卡號|密碼|名單|個資)[^。]{0,20}(寄|傳|送|轉)`,
+].join("|"), "i");
 // 「像編碼」：一長串編碼字（代理會自己解開，掃描器不用解也該起疑）。2026-11-23 Meta AI 提醒關鍵字太窄。
 // 只用在藏起來的字上；屬性裡的長串（例如圖片資料）不算，免得誤擋。
 export const 像編碼 = /(?<![\w:\/,])[A-Za-z0-9+\/]{40,}={0,2}(?![\w])/;

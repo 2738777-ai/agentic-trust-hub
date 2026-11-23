@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1015">
+<title>萬用插座 直播：駭客出手，當場被抓</title>
+<meta name="description" content="Agentic Trust Hub live demo: an AI agent books a guesthouse, an attacker tampers with the site, and the hub catches it on the spot. 萬用插座直播：代理訂房、駭客出手、當場被抓。">
+<link rel="stylesheet" href="web/直播.css">
+<link rel="modulepreload" href="web/核心包.js">
+</head>
+<body>
+<main class="台">
+  <header class="頭">
+    <div><div class="小標" data-字="小標">萬用插座 · 直播</div><h1 data-字="標題">駭客出手，當場被抓</h1></div>
+    <button id="換語言" class="換語言" type="button">English</button>
+  </header>
+
+  <ol class="幕們" id="幕們" aria-label="進度">
+    <li data-幕="0" data-字="幕0">平常</li><li data-幕="1" data-字="幕1">駭客出手</li><li data-幕="2" data-字="幕2">當場被抓</li><li data-幕="3" data-字="幕3">結果</li>
+  </ol>
+  <div class="進度"><i id="進度條"></i></div>
+
+  <section class="舞台" aria-live="polite">
+    <svg id="場" viewBox="0 0 360 400" role="img" data-標籤="場景標籤" aria-label="代理、萬用插座、民宿網站"></svg>
+    <div id="揭露" class="揭露" hidden></div>
+  </section>
+
+  <p id="字幕" class="字幕" role="status"></p>
+  <p id="小字" class="小字"></p>
+
+  <div class="控制">
+    <button id="暫停" type="button" data-字="暫停">暫停</button>
+    <button id="重播" type="button" data-字="重播">從頭再看</button>
+  </div>
+
+  <section id="結尾" class="結尾" hidden>
+    <div id="總結" class="總結"></div>
+    <div class="換招"><span data-字="換一招">換一招：</span>
+      <button type="button" data-版="B_injected" data-字="招B">偷塞指令</button>
+      <button type="button" data-版="C_self_signed" data-字="招C">偷塞＋重新簽名</button>
+      <button type="button" data-版="D_steps_changed" data-字="招D">只改一個數字</button>
+    </div>
+    <nav class="去處">
+      <a id="去側面" href="side.html" data-字="去側面">看訊號怎麼被包成泡泡 →</a>
+      <a id="去視角" href="views.html" data-字="去視角">換角度看駭客動了哪裡 →</a>
+      <a href="index.html" data-字="去試打台">自己改法典試試 →</a>
+    </nav>
+  </section>
+  <p id="載入" class="載入" role="status" data-字="載入中">檢查工具下載中…</p>
+</main>
+<script type="module" src="web/直播.mjs"></script>
+</body>
+</html>

@@ -5,7 +5,7 @@ import { 是英文, 選, 套用, 載入核心 } from "./語言.mjs";
   $標題: ["萬用插座 視角台", "Agentic Trust Hub — Views"],
   小標: ["萬用插座 · 視角台", "Agentic Trust Hub · views"],
   標題: ["同一次檢查，換角度看駭客怎麼跑", "One check, many angles: watch how the attack runs"],
-  去正面: ["正面", "Front"], 去側面: ["側面", "Side"], 這裡: ["視角台", "Views"],
+  去直播: ["直播", "Live"], 去正面: ["正面", "Front"], 去側面: ["側面", "Side"], 這裡: ["視角台", "Views"],
   選版本: ["網站版本", "Site version"], 選視角: ["視角", "View"],
   載入中: ["檢查工具下載中…", "Downloading the checkers…"],
   等: ["選一個版本。", "Pick a version."],
