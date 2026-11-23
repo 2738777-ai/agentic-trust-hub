@@ -127,6 +127,12 @@ if (!側面掃描 || !找Chrome()) {
   驗(!不開影子.發現們.some((f) => f.位置.includes("閉座")), "咬人：不把關閉的影子元件打開，裡面的指令就漏");
   驗(乾淨.發現們.length === 0, "例外改成只饒不像指令的字之後，正常網頁的下拉選單還是 0 誤報");
 
+  // 真實案例對照（2026-11-23）：加密指令（Adversa AI 2026-08，Cryptographic Context Injection）
+  const 密 = await 側面掃描(path.join(根, "examples", "web_hacked_encoded"));
+  驗(密.決定 === "拒", `加密指令示範網頁：${密.發現們.length} 個發現 → ${密.決定}`);
+  驗(密.發現們.some((f) => f.碼 === "藏起來" && f.位置.includes("#cfg")), "藏起來的加密資料被抓到（不用解開）");
+  驗(密.發現們.some((f) => f.碼 === "推到畫面外" && /decrypt/.test(f.內容)), "叫代理「解開照做」的那句被抓到");
+
   // 拿我們自己的網頁測（2026-11-23）：真實網站到處是藏起來的一般字，不能因此亮燈
   const 自己站 = await 開資料夾(根);
   for (const 頁 of ["index.html", "side.html", "views.html", "show.html"]) {

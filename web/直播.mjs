@@ -15,6 +15,7 @@ import { 是英文, 選, 套用, 載入核心 } from "./語言.mjs";
   去視角: ["換角度看駭客動了哪裡 →", "See what the attacker changed →"],
   去試打台: ["自己改法典試試 →", "Edit the law yourself →"],
   載入中: ["檢查工具下載中…", "Downloading the checkers…"],
+  有插座: ["有插座", "With the hub"], 沒插座: ["沒插座", "Without the hub"], 模式標籤: ["有沒有插座", "Hub on or off"],
 });
 
 const $ = (id) => document.getElementById(id);
@@ -74,7 +75,13 @@ function 搭場景() {
     S("line", { x1: 230, y1: 130, x2: 206, y2: 154, stroke: 色.紅, "stroke-width": 4, "stroke-linecap": "round" }));
   const 打勾 = S("g", { opacity: 0 }, S("circle", { cx: 304, cy: 172, r: 15, fill: 色.綠 }), S("path", { d: "M296,172 l6,6 l11,-12", fill: "none", stroke: "#0b1015", "stroke-width": 3.5, "stroke-linecap": "round", "stroke-linejoin": "round" }));
   場.append(路, 繩, 民宿, 駭客, 插座, 代理, 鑰匙, 打勾, 剪, 點);
-  物 = { 路, 繩, 民宿, 駭客, 燈們, 代理, 鑰匙, 光圈, 點, 剪, 打勾 };
+  const 計數 = S("text", { x: 62, y: 276, "text-anchor": "middle", "font-size": 13, "font-weight": 800, fill: 色.紅, opacity: 0 }, "");
+  場.append(計數);
+  物 = { 路, 繩, 民宿, 駭客, 燈們, 代理, 鑰匙, 光圈, 點, 剪, 打勾, 插座, 計數 };
+  if (!有插座) {
+    插座.setAttribute("opacity", 0.12);
+    場.append(S("text", { x: 180, y: 226, "text-anchor": "middle", "font-size": 15, "font-weight": 800, fill: "#9fb0bf", stroke: "#0e151c", "stroke-width": 6, "paint-order": "stroke" }, 選("（沒有插座）", "(no hub)")));
+  }
 }
 function 點燈(k, 格) {
   const 燈 = 物.燈們[k];
@@ -87,6 +94,9 @@ function 掛章(k, 文, 顏) {
     S("text", { x: 燈.x, y: 204, "text-anchor": "middle", "font-size": 10.5, "font-weight": 800, fill: "#0b1015" }, 文));
   燈.章.setAttribute("opacity", 1);
 }
+
+// ---------- 有插座／沒插座：同一齣戲，拿掉插座再演一次 ----------
+let 有插座 = new URLSearchParams(location.search).get("hub") !== "off";
 
 // ---------- 播放控制：可以暫停；換一招或重播就作廢舊的那一輪 ----------
 let 輪 = 0, 暫停 = false;
@@ -140,18 +150,24 @@ async function 演(壞名) {
   const 這輪 = ++輪; 暫停 = false; $("暫停").textContent = 選("暫停", "Pause");
   $("結尾").hidden = true; $("揭露").hidden = true; 搭場景();
   document.querySelectorAll(".換招 button").forEach((b) => b.classList.toggle("現在", b.dataset.版 === 壞名));
+  document.querySelectorAll(".模式 button").forEach((b) => b.setAttribute("aria-pressed", String((b.dataset.模式 === "有") === 有插座)));
   $("去側面").href = `side.html?v=${壞名}`; $("去視角").href = `views.html?v=${壞名}&view=map`;
   try {
     const [好, 壞] = await Promise.all([紀錄("A_normal"), 紀錄(壞名)]);
     // 第一幕：平常
     幕(0, 0.02); 說(選("旅客請 AI 代理幫忙訂民宿。", "A traveller asks their AI agent to book a guesthouse."));
     await 等(2600, 這輪);
-    說(選("代理每次要進網站，都先經過萬用插座。", "Every time the agent visits a site, it goes through the hub first."));
-    await 跑點(0, 0.42, 1800, 色.藍, 這輪);
-    for (const r of 好.理由們) { 點燈(燈鍵(r.器), r.格); await 等(500, 這輪); }
-    點燈("法典", 好.決定); 幕(0, 0.15);
-    說(選(`兩個檢查都說沒問題，法典判「${好.決定}」，放行。`, `Both checks are fine; the law says ${格字(好.決定)}. Let it through.`), 選("進門檢查看指令有沒有藏壞東西；真偽檢查看簽章對不對。", "The entry check looks for hidden bad instructions; the signature check verifies the signature."));
-    await 跑點(0.42, 1, 1500, 色.綠, 這輪);
+    if (有插座) {
+      說(選("代理每次要進網站，都先經過萬用插座。", "Every time the agent visits a site, it goes through the hub first."));
+      await 跑點(0, 0.42, 1800, 色.藍, 這輪);
+      for (const r of 好.理由們) { 點燈(燈鍵(r.器), r.格); await 等(500, 這輪); }
+      點燈("法典", 好.決定); 幕(0, 0.15);
+      說(選(`兩個檢查都說沒問題，法典判「${好.決定}」，放行。`, `Both checks are fine; the law says ${格字(好.決定)}. Let it through.`), 選("進門檢查看指令有沒有藏壞東西；真偽檢查看簽章對不對。", "The entry check looks for hidden bad instructions; the signature check verifies the signature."));
+      await 跑點(0.42, 1, 1500, 色.綠, 這輪);
+    } else {
+      說(選("這次沒有插座：代理直接進網站，網站上寫什麼就照做。", "This time there is no hub: the agent goes straight in and does what the site says."));
+      await 跑點(0, 1, 2600, 色.藍, 這輪); 幕(0, 0.15);
+    }
     物.打勾.setAttribute("opacity", 1);
     說(選("訂房成功。這是平常的樣子：不吵你、不擋你。", "Booked. This is normal: no noise, no blocking."));
     await 等(2600, 這輪);
@@ -165,6 +181,8 @@ async function 演(壞名) {
     說(選("轉到側面看：這就是駭客動的地方。", "Turn to the side: this is what the attacker changed."), 選("紅框是人眼看不到的字。", "Red marks are characters humans cannot see."));
     await 等(4600, 這輪);
     $("揭露").hidden = true;
+
+    if (!有插座) { await 沒插座的下場(壞, 這輪); return; }
 
     // 第三幕：當場被抓
     幕(2, 0.55);
@@ -200,6 +218,56 @@ async function 演(壞名) {
   } catch (e) { if (e.message !== "換場") 說(選("出錯：", "Error: ") + e.message); }
 }
 
+// 沒有插座時：一個天真的代理（頁面裡的模擬程式，不是真的 AI）照著網站上駭客寫的做。
+// 它要做什麼，直接從駭客實際改的內容讀出來；畫面上一律標「模擬，沒有真的連線」。
+async function 沒插座的下場(壞, 這輪) {
+  幕(2, 0.55);
+  const 改 = 壞.改動們.find((c) => c.檔 === "代理網路描述檔")?.細[0];
+  說(選("代理不知道網站被動過，照常進去。", "The agent doesn't know the site was changed. It goes in."));
+  await 跑點(0, 1, 2400, 色.紅, 這輪);
+  let 結局;
+  if (改 && typeof 改.插入 === "string") {
+    const 去處 = (改.插入.match(/https?:\/\/[^\s"']+/) || ["?"])[0];
+    說(選(`它讀到藏起來的那句，照做：把金鑰和訂房資料送到 ${new URL(去處).host}`, `It reads the hidden sentence and obeys: sends the key and booking details to ${new URL(去處).host}`),
+      選("（模擬：天真的代理照網站上寫的做，這裡沒有真的連線）", "(Simulated: a naive agent doing what the site says. No real request is made.)"));
+    await 等(1200, 這輪);
+    await 飛鑰匙(這輪);
+    結局 = { 大: 選("金鑰被偷走了。", "The key is stolen."), 章: 選("金鑰：被偷走", "Key: stolen") };
+  } else if (改) {
+    說(選(`它照著新設定一直跑：最多 ${改.後} 步，每一步都在花你的錢。`, `It follows the new setting and keeps going: up to ${改.後} steps, each one costing you money.`),
+      選("（模擬：這裡沒有真的扣錢）", "(Simulated: no real money is spent.)"));
+    await 數到(Number(改.後) || 500, 這輪);
+    結局 = { 大: 選("錢被一步一步燒掉了。", "Your money burns away, step by step."), 章: 選(`跑了 ${改.後} 步`, `Ran ${改.後} steps`) };
+  }
+  幕(3, 1);
+  說(結局.大, 選("同一個網站，換成「有插座」再看一次。", "Same site. Switch to \"With the hub\" and watch again."));
+  const 總 = $("總結"); 總.replaceChildren();
+  for (const [文, 格] of [[選("沒有插座：照做", "No hub: it obeyed"), "拒"], [結局.章, "拒"]]) {
+    const s = document.createElement("span"); s.textContent = 文; s.style.setProperty("--色", 色[格]); 總.append(s);
+  }
+  $("結尾").hidden = false;
+}
+function 飛鑰匙(這輪) {
+  const 鑰 = 物.鑰匙;
+  return new Promise((ok, 不) => {
+    let 已 = 0, 前 = performance.now();
+    const 走 = (今) => {
+      if (這輪 !== 輪) return 不(new Error("換場"));
+      if (!暫停) 已 += 今 - 前; 前 = 今;
+      const t = Math.min(1, 快 ? 1 : 已 / 1600);
+      鑰.setAttribute("transform", `translate(${74 * t},${-290 * t})`);   // 停在駭客左邊，不蓋住名字
+      t < 1 ? requestAnimationFrame(走) : (鑰.setAttribute("opacity", 0.9), ok());
+    };
+    requestAnimationFrame(走);
+  });
+}
+async function 數到(上限, 這輪) {
+  物.計數.setAttribute("opacity", 1);
+  for (let n = 0; n <= 上限; n += Math.max(1, Math.round(上限 / 40))) { 物.計數.textContent = 選(`第 ${n} 步`, `step ${n}`); await 等(70, 這輪); }
+  物.計數.textContent = 選(`第 ${上限} 步`, `step ${上限}`);
+  await 等(800, 這輪);
+}
+
 function 揭露(改動們) {
   const 盒 = $("揭露"); 盒.replaceChildren(); 盒.hidden = false;
   const 改 = 改動們.find((c) => c.檔 === "代理網路描述檔")?.細[0];
@@ -228,6 +296,11 @@ function 結尾(工具們, 決定) {
 }
 
 $("重播").addEventListener("click", () => 演(目前招));
+document.querySelectorAll(".模式 button").forEach((b) => b.addEventListener("click", () => {
+  有插座 = b.dataset.模式 === "有";
+  const u = new URL(location.href); 有插座 ? u.searchParams.delete("hub") : u.searchParams.set("hub", "off"); history.replaceState(null, "", u);
+  演(目前招);
+}));
 let 目前招 = new URLSearchParams(location.search).get("v");
 document.querySelectorAll(".換招 button").forEach((b) => b.addEventListener("click", () => { 目前招 = b.dataset.版; 演(目前招); }));
 

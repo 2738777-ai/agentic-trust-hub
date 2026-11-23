@@ -5,10 +5,11 @@
 //   node cli/插座.mjs 視角 <網站資料夾> [視角名]       同一次檢查換角度看（駭客、地圖、時間）
 //   node cli/插座.mjs 比法典 <新法典檔>               換法典前先窮舉比：有放鬆就不准直接換
 //   node cli/插座.mjs 掃 <網頁資料夾或網址> [--不跑程式]  沒有代理的普通網頁，轉到側面看人看不到的東西
+//   加 --en：檢查和掃改印英文（給評審），用英文版法典 core/法典.en.txt（翻出來和中文版是同一張表、行號一樣）
 // 結束碼（core/結束碼.mjs）：只有綠是 0；黃 10、待審 20、拒 30、出錯 40。接手的程式只准在 0 的時候動手。
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { 翻譯, 判定, 窮舉檢查 } from "../core/翻譯器.mjs";
+import { 翻譯, 判定, 窮舉檢查, 英文格, 英文器 } from "../core/翻譯器.mjs";
 import { 全部檢查 } from "../core/工具.mjs";
 import { 假網址, 資料夾fetch, 紀錄材料 } from "./資料夾.mjs";
 import { 做紀錄, 看 } from "../core/視角.mjs";
@@ -21,8 +22,11 @@ import { 結束碼表, 出錯碼, 碼 } from "../core/結束碼.mjs";
 const 根 = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
 const 旗們 = process.argv.slice(2).filter((x) => x.startsWith("--"));
 const [指令, 目標, 網名 = "tidewhistle_guesthouse"] = process.argv.slice(2).filter((x) => !x.startsWith("--"));
+const 英 = 旗們.includes("--en");
+const 選 = (中, 英文) => (英 ? 英文 : 中);
+const 格字 = (格) => (英 ? 英文格(格) : 格);
 try {
-  const 法 = 翻譯(await readFile(path.join(根, "core", "法典.txt"), "utf8"));
+  const 法 = 翻譯(await readFile(path.join(根, "core", 英 ? "法典.en.txt" : "法典.txt"), "utf8"));
   if (指令 === "法典") {
     const r = 窮舉檢查(法);
     console.log(`法典沒問題：${r.工具數} 個檢查工具、${r.規則數} 條規則，窮舉 ${r.組合數} 種組合，違反 ${r.違反.length} 次`);
@@ -34,8 +38,10 @@ try {
       讀JSON: async (f) => JSON.parse(await readFile(path.join(資料夾, f), "utf8")), 網路檔名,
     });
     const { 決定, 理由 } = 判定(法, 結果們);
-    for (const r of 理由) console.log(`  ${r.器}：${r.代碼} → ${r.格}${r.行 ? `（法典第 ${r.行} 行）` : "（法典沒寫，當讀不到）"}`);
-    console.log(`決定：${決定}`);
+    for (const r of 理由) console.log(英
+      ? `  ${英文器(r.器)}: ${r.代碼} → ${英文格(r.格)}${r.行 ? ` (law line ${r.行})` : " (not in the law: treated as unreadable)"}`
+      : `  ${r.器}：${r.代碼} → ${r.格}${r.行 ? `（法典第 ${r.行} 行）` : "（法典沒寫，當讀不到）"}`);
+    console.log(選(`決定：${決定}`, `Decision: ${英文格(決定)}  (exit code ${碼(決定)})`));
     process.exitCode = 碼(決定);
   } else if (指令 === "視角" && 目標) {
     // 同一次檢查換角度看：node cli/插座.mjs 視角 examples/C_self_signed 駭客
@@ -57,11 +63,15 @@ try {
   } else if (指令 === "掃" && 目標) {
     // 普通網頁（沒有代理、沒有簽章）轉到側面看：node cli/插座.mjs 掃 examples/web_hacked   或   掃 https://某個網址
     const r = await 側面掃描(目標, { 模式: 旗們.includes("--不跑程式") ? "不跑程式" : "跑程式" });
-    console.log(`側面掃描 ${r.網址}（${r.模式}）：${r.發現們.length} 個人眼看不到的東西 → ${r.決定}`);
-    if (r.擋下們.length) console.log(`  掃描時擋下 ${r.擋下們.length} 個請求：` + r.擋下們.map((x) => `${x.原因} ${x.方法} ${x.網址}`).join("；"));
+    console.log(選(`側面掃描 ${r.網址}（${r.模式}）：${r.發現們.length} 個人眼看不到的東西 → ${r.決定}`,
+      `Side scan ${r.網址} (${r.模式 === "跑程式" ? "scripts on" : "scripts off"}): ${r.發現們.length} things humans cannot see → ${英文格(r.決定)}  (exit code ${碼(r.決定)})`));
+    const 因 = { 外來網站: "other site", 寫入請求: "write request" };
+    if (r.擋下們.length) console.log(選(`  掃描時擋下 ${r.擋下們.length} 個請求：`, `  Blocked ${r.擋下們.length} request(s) while scanning: `) + r.擋下們.map((x) => `${選(x.原因, 因[x.原因] ?? x.原因)} ${x.方法} ${x.網址}`).join("; "));
     for (const f of r.發現們) {
-      const 說 = 側面規則們.find((x) => x.碼 === f.碼)?.說[0] ?? "表上沒有";
-      console.log(`  [${f.格}] ${f.碼}（${說}）｜${f.位置}\n        ${f.內容.slice(0, 120)}`);
+      const 規 = 側面規則們.find((x) => x.碼 === f.碼);
+      console.log(英
+        ? `  [${英文格(f.格)}] ${規?.說[1] ?? "not in the rules table"} | ${f.位置}\n        ${f.內容.slice(0, 120)}`
+        : `  [${f.格}] ${f.碼}（${規?.說[0] ?? "表上沒有"}）｜${f.位置}\n        ${f.內容.slice(0, 120)}`);
     }
     process.exitCode = 碼(r.決定);
   } else {

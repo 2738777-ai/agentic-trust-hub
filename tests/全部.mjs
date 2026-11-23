@@ -3,7 +3,7 @@
 import { readFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
-import { 翻譯, 窮舉檢查, 法典錯誤 } from "../core/翻譯器.mjs";
+import { 翻譯, 窮舉檢查, 法典錯誤, 英文格 } from "../core/翻譯器.mjs";
 
 const 根 = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
 let 過 = 0, 錯 = 0;
@@ -32,6 +32,11 @@ for (const [版, 答] of Object.entries(預期)) {
 }
 // 咬人：只有綠是 0（ChatGPT 第四輪：原本判拒也回 0）
 驗(Object.entries(預期).every(([, 答]) => (答 === "綠") === (碼(答) === 0)), "結束碼表：只有綠是 0，其他都不是 0");
+// 給評審的英文輸出（--en）：用英文法典，決定和結束碼要跟中文版一模一樣
+for (const [名, 答] of Object.entries(預期)) {
+  const r = 跑("檢查", path.join(根, "examples", 名), "--en");
+  驗(r.結束 === 碼(答) && r.出.includes(`Decision: ${英文格(答)}`), `英文輸出 ${名}：Decision ${英文格(答)}，結束碼 ${r.結束}`);
+}
 驗(跑("不存在的指令").結束 !== 0 && 跑("檢查", path.join(根, "examples", "沒有這個資料夾")).結束 !== 0, "打錯指令、讀不到資料夾：結束碼不是 0（出事就關門）");
 // 4 泡泡（因果鏈）測試
 try { execFileSync(process.execPath, [path.join(根, "tests", "泡泡.mjs")], { encoding: "utf8" }); 驗(true, "泡泡測試全部通過（node tests/泡泡.mjs）"); }
