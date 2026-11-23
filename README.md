@@ -76,6 +76,7 @@ C：只看簽章會被騙。D：只看指令只會「待審」。兩個接在一
 - **側面掃描**（`core/側面法典.mjs`、`core/側面掃描.mjs`）：沒有代理的普通網頁，轉到側面把人看不到的東西翻出來，照同一把尺判。示範：`examples/web_clean` 零誤報，`examples/web_hacked` 六招全抓。第一次跑時下拉選單被誤報（自體免疫），所以法典寫了一條例外。
 - **紅隊第二輪（Grok 照工單來打，2026-11-23）**：打到「樣式產生的字」和「影子元件」兩處沒掃，加上圖形字的同色。補法：側面法典加一張「掃描範圍」表，掃描器照表走、回報自己掃了哪幾處，表上有沒做到就停；`examples/web_hacked_css` 三招全抓，拿掉任一處，那一招就漏（咬人測試）。畫布上的字還沒補，老實寫在工單。
 - **紅隊第三輪（Gemini，2026-11-23）**：打到幾何藏字（裁切、縮成零、零大小的框、把字推出去），也抓到一次真的誤擋好人：照片上的白字被當成同色字直接判拒。補法：法典加「裁掉或縮成零」「疑似同色」（背景是圖片看不準，最多判黃），例外條件加「無障礙短提示」（讀屏軟體用的短句不算）；放鬆偵測分出四種原因、尺被改單獨亮燈。Gemini 說影子元件的位置會變成未定義，實測不成立。
+- **紅隊第四輪（ChatGPT，2026-11-23）**：打到插座自己的洞——本機資料夾當網站時，`/site` 和 `/site-secret` 開頭一樣，編碼過的 `../` 就讀到隔壁（改成照真實位置比資料夾邊界）；還有內嵌框、送出按鈕改去處、「只看不跑」說過頭（本站程式其實會跑，改成只准讀、寫入擋下列出，另加「不跑程式」模式）、「檢查」判拒還回 0（改成結束碼表：只有綠是 0）。四輪下來的共同結論：**檢查結果要跟「這一個動作、這一刻的內容」綁在一起**，這就是下一步「確認那一下」。
 
 ### 怎麼用
 
@@ -83,7 +84,7 @@ C：只看簽章會被騙。D：只看指令只會「待審」。兩個接在一
 node cli/插座.mjs 法典                              # 檢查法典、窮舉所有組合
 node cli/插座.mjs 檢查 examples/C_self_signed       # 讓兩個工具各看一次，照法典合成決定
 node cli/插座.mjs 視角 examples/C_self_signed 駭客  # 同一次檢查換角度看（駭客、地圖、時間）
-node cli/插座.mjs 掃 examples/web_hacked            # 普通網頁轉到側面看（要先 npm install）
+node cli/插座.mjs 掃 examples/web_hacked            # 普通網頁轉到側面看（要先 npm install；加 --不跑程式 完全不跑網頁程式）
 node cli/插座.mjs 比法典 我的新法典.txt              # 換法典前先比：有放鬆就不准直接換
 node tests/全部.mjs                                 # 全部測試
 npm install && node tools/打包.mjs                  # 改了 core/ 之後，重新打包網頁用的核心包
@@ -91,6 +92,8 @@ node tools/做示範版本.mjs <官方範例民宿資料夾>          # 重做 5
 ```
 
 人用自然語言說「幫我看那間民宿能不能信」，AI 只負責翻成上面的命令；放不放行由法典決定。同一行命令跑一百次，結果都一樣。
+
+結束碼：只有綠是 0（黃 10、待審 20、拒 30、出錯 40），接手的程式只准在 0 的時候動手。
 
 ### 檔案
 
@@ -123,7 +126,7 @@ The Open Agentic Web lets unknown agents run in your browser. Several community 
 - Adding a checker means adding lines to the law, not code. The translator refuses unknown sentences, contradictions and values not on the scale, and every law change is **exhaustively checked** over all verdict combinations.
 - Measured on five variants of the official guesthouse example: a malicious-but-re-signed network fools the signature check alone; a "harmless" step-limit change only gets *held* by the instruction check alone; combined, both are denied.
 
-Every incoming signal is wrapped in a hash-chained *bubble* at the entry point (provenance + parent link + stamps); a deny verdict cuts the whole causal rope (`side.html`). `views.html` shows the same run record from four angles — attacker (field-level diff, invisible characters highlighted, which checker was fooled), map (animated tampered signals stop where caught), matrix (would a single checker have let it in?) and timeline (bubble swimlanes with causal buckles). Each view only receives the fields registered in `core/視角法典.mjs`, and a guard stops any view that shows a different decision than the record. Red-team self-test (2026-11-22): we attacked our own hub first. Attack #1 (talk a human into pasting a law that maps DENIED to GREEN) passed every existing check, so `core/鬆緊.mjs` now compares old and new laws over every combination: tightening applies at once, any loosened cell (including removing a checker) needs explicit human consent. `node cli/插座.mjs 掃` side-scans ordinary pages with no agent or signature (hidden, same-colour, tiny, off-screen, invisible-character, label-only text; off-site forms; third-party scripts): zero false positives on the clean demo, all six tricks caught on the hacked one. `skill/SKILL.md` teaches any AI to wear the hub; `紅隊工單.md` invites other AIs to attack it. Run `node tests/全部.mjs` (22/22 pass, plus 41 view tests and 20 bubble/tamper tests and Chinese/English law equivalence over every combination). Built for the [Open Agentic Web Challenge](https://cognizant-agenticweb.devpost.com/).
+Every incoming signal is wrapped in a hash-chained *bubble* at the entry point (provenance + parent link + stamps); a deny verdict cuts the whole causal rope (`side.html`). `views.html` shows the same run record from four angles — attacker (field-level diff, invisible characters highlighted, which checker was fooled), map (animated tampered signals stop where caught), matrix (would a single checker have let it in?) and timeline (bubble swimlanes with causal buckles). Each view only receives the fields registered in `core/視角法典.mjs`, and a guard stops any view that shows a different decision than the record. Red-team self-test (2026-11-22): we attacked our own hub first. Attack #1 (talk a human into pasting a law that maps DENIED to GREEN) passed every existing check, so `core/鬆緊.mjs` now compares old and new laws over every combination: tightening applies at once, any loosened cell (including removing a checker) needs explicit human consent. `node cli/插座.mjs 掃` side-scans ordinary pages with no agent or signature (hidden, same-colour, tiny, off-screen, invisible-character, label-only text; off-site forms; third-party scripts): zero false positives on the clean demo, all six tricks caught on the hacked one. `skill/SKILL.md` teaches any AI to wear the hub; `紅隊工單.md` invites other AIs to attack it. Exit codes: only GREEN is 0 (YELLOW 10, REVIEW 20, DENY 30, error 40). Run `node tests/全部.mjs` (24/24 pass, plus 41 view tests and 20 bubble/tamper tests and Chinese/English law equivalence over every combination). Built for the [Open Agentic Web Challenge](https://cognizant-agenticweb.devpost.com/).
 
 ## License
 

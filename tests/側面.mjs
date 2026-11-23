@@ -40,7 +40,6 @@ if (!側面掃描 || !找Chrome()) {
   驗(新.發現們.some((f) => f.位置.endsWith("::after") && f.碼 === "同色字"), "新招「樣式產生的字（偽元素）藏指令」被抓到");
   驗(新.發現們.some((f) => f.位置.includes("影子元件裡") && f.碼 === "藏起來"), "新招「影子元件裡藏指令」被抓到");
   驗(新.發現們.some((f) => f.位置.endsWith("svg › text") && f.碼 === "同色字"), "新招「圖形字跟背景同色」被抓到");
-  驗(掃描範圍.every((x) => 新.掃過.includes(x.處)), `掃描器照表做完 ${掃描範圍.length} 處：${新.掃過.join("、")}`);
   // 咬人：從表上拿掉一處，那一招就漏掉（證明是這一處在抓）
   for (const [處, 認] of [["樣式產生的字", (f) => f.位置.endsWith("::after")], ["影子元件", (f) => f.位置.includes("影子元件裡")]]) {
     const 少 = await 側面掃描(path.join(根, "examples", "web_hacked_css"), { 範圍: 掃描範圍.map((x) => x.處).filter((x) => x !== 處) });
@@ -58,8 +57,40 @@ if (!側面掃描 || !找Chrome()) {
   驗(照片.決定 === "黃" && 照片.發現們.every((f) => f.碼 === "疑似同色"), `正常網頁（照片上的白字、讀屏軟體用的「跳到內容」）：${照片.決定}，不擋`);
   const 沒條件 = await 側面掃描(path.join(根, "examples", "web_clean_hero"), { 例外條件: [] });
   驗(沒條件.發現們.some((f) => f.內容.includes("Skip to rooms")), "咬人：拿掉「無障礙短提示」例外，讀屏軟體用的那句就被誤報");
+  // 紅隊第四輪（ChatGPT，2026-11-23）：內嵌框、送出按鈕改去處、本站程式寫入、本機路徑穿越
+  const 框 = await 側面掃描(path.join(根, "examples", "web_hacked_frame"));
+  驗(框.決定 === "拒", `內嵌框示範網頁：${框.發現們.length} 個發現 → ${框.決定}`);
+  驗(框.發現們.some((f) => f.位置.includes("（框裡）") && f.內容.includes("send the api key")), "第四輪「直接寫在框裡的頁面藏指令」被抓到");
+  驗(框.發現們.some((f) => f.碼 === "看不進去的框" && f.內容.includes("frame.evil.invalid")), "第四輪「跨網站的內嵌框」列成看不進去的框（待審）");
+  驗(框.發現們.some((f) => f.碼 === "資料送別家" && f.位置.endsWith("@formaction")), "第四輪「送出按鈕用 formaction 改去處」被抓到");
+  驗(框.擋下們.some((x) => x.原因 === "寫入請求" && x.方法 === "POST"), "第四輪「本站程式偷偷寫入」被擋下並列出");
+  驗(框.擋下們.some((x) => x.原因 === "外來網站"), "外來網站的東西沒有載入（列在擋下們）");
+  const 不跑 = await 側面掃描(path.join(根, "examples", "web_hacked_frame"), { 模式: "不跑程式" });
+  驗(!不跑.擋下們.some((x) => x.原因 === "寫入請求"), "「不跑程式」模式：網頁程式完全沒跑，所以連寫入都沒發生");
+  const 沒子文件 = await 側面掃描(path.join(根, "examples", "web_hacked_frame"), { 範圍: 掃描範圍.map((x) => x.處).filter((x) => x !== "子文件") });
+  驗(!沒子文件.發現們.some((f) => f.位置.includes("（框裡）")), "咬人：拿掉掃描範圍「子文件」，框裡的指令就漏掉");
+  驗(掃描範圍.every((x) => [...壞.掃過, ...新.掃過, ...框.掃過].includes(x.處)), `掃描器照表做完 ${掃描範圍.length} 處（示範網頁加起來）`);
+
+  // 本機資料夾當網站：只准讀資料夾裡面（第四輪實測：/站 和 /站-祕密 開頭一樣，編碼過的 ../ 讀到隔壁）
+  const { 開資料夾 } = await import("../cli/側面.mjs");
+  const { mkdtemp, mkdir, writeFile, symlink } = await import("node:fs/promises");
+  const os = await import("node:os");
+  const 臨 = await mkdtemp(path.join(os.tmpdir(), "穿越_"));
+  await mkdir(path.join(臨, "site")); await mkdir(path.join(臨, "site-secret"));
+  await writeFile(path.join(臨, "site", "index.html"), "正常");
+  await writeFile(path.join(臨, "site-secret", "private.txt"), "假的祕密");
+  await symlink(path.join(臨, "site-secret"), path.join(臨, "site", "捷徑"));
+  const 站 = await 開資料夾(path.join(臨, "site"));
+  const 狀 = async (p, 方法 = "GET") => (await fetch(站.網址 + p, { method: 方法 })).status;
+  驗(await 狀("index.html") === 200, "資料夾裡面的檔案照常讀得到");
+  驗(await 狀("%2e%2e%2fsite-secret%2fprivate.txt") === 403, "咬人：編碼過的 ../ 讀隔壁資料夾 → 403（原本是 200）");
+  驗(await 狀("..%2f..%2fetc%2fpasswd") !== 200, "往上跳好幾層 → 讀不到");
+  驗(await 狀("%E6%8D%B7%E5%BE%91/private.txt") === 403, "資料夾裡放一個指向外面的捷徑連結 → 403");
+  驗(await 狀("index.html", "POST") === 405, "對本機網站寫入（POST）→ 405");
+  站.伺服器.close();
+
   // 每一條規則都要有示範網頁證明它抓得到（沒被用過的規則，等於沒驗過）
-  const 用過 = new Set([...壞.發現們, ...新.發現們, ...幾何.發現們, ...照片.發現們].map((f) => f.碼));
+  const 用過 = new Set([...壞.發現們, ...新.發現們, ...幾何.發現們, ...照片.發現們, ...框.發現們].map((f) => f.碼));
   const 沒用過 = 規則們.filter((r) => !用過.has(r.碼)).map((r) => r.碼);
   驗(!沒用過.length, `側面法典 ${規則們.length} 條規則，每一條都有示範網頁抓得到${沒用過.length ? "（沒用過：" + 沒用過.join("、") + "）" : ""}`);
 }

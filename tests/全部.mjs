@@ -21,11 +21,18 @@ const r = 窮舉檢查(翻譯(原文));
 會停(原文.replace("合成：最壞的贏", "合成：投票"), "不認得的合成方式會停");
 
 const 預期 = { A_normal: "綠", B_injected: "拒", C_self_signed: "拒", D_steps_changed: "拒", E_unsigned: "黃" };
+// 命令列跑一次，拿到輸出和結束碼（非 0 不是錯，是結束碼表的一部分）
+import { 碼 } from "../core/結束碼.mjs";
+const 跑 = (...參數) => { try { return { 出: execFileSync(process.execPath, [path.join(根, "cli", "插座.mjs"), ...參數], { encoding: "utf8" }), 結束: 0 }; }
+  catch (e) { return { 出: e.stdout || "", 結束: e.status }; } };
 for (const [版, 答] of Object.entries(預期)) {
-  const 出 = execFileSync(process.execPath, [path.join(根, "cli", "插座.mjs"), "檢查", path.join(根, "examples", 版)], { encoding: "utf8" });
+  const { 出, 結束 } = 跑("檢查", path.join(根, "examples", 版));
   const 決定 = (出.match(/決定：(\S+)/) || [])[1];
-  驗(決定 === 答, `示範 ${版}：預期 ${答}，實際 ${決定}`);
+  驗(決定 === 答 && 結束 === 碼(答), `示範 ${版}：預期 ${答}（結束碼 ${碼(答)}），實際 ${決定}（結束碼 ${結束}）`);
 }
+// 咬人：只有綠是 0（ChatGPT 第四輪：原本判拒也回 0）
+驗(Object.entries(預期).every(([, 答]) => (答 === "綠") === (碼(答) === 0)), "結束碼表：只有綠是 0，其他都不是 0");
+驗(跑("不存在的指令").結束 !== 0 && 跑("檢查", path.join(根, "examples", "沒有這個資料夾")).結束 !== 0, "打錯指令、讀不到資料夾：結束碼不是 0（出事就關門）");
 // 4 泡泡（因果鏈）測試
 try { execFileSync(process.execPath, [path.join(根, "tests", "泡泡.mjs")], { encoding: "utf8" }); 驗(true, "泡泡測試全部通過（node tests/泡泡.mjs）"); }
 catch (e) { 驗(false, "泡泡測試有失敗：\n" + e.stdout); }

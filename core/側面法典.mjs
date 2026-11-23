@@ -17,18 +17,20 @@ export const 規則們 = [
   { 碼: "疑似同色", 說: ["背景是圖片，看不出字跟背景差多少", "background is an image, contrast cannot be judged"], 種: "字", 上限: "黃" },
   { 碼: "隱形字", 說: ["含人眼看不到的字元", "contains invisible characters"], 種: "字" },
   { 碼: "只給機器看", 說: ["藏在標籤、標題、替代文字裡", "hidden in a label, title or alt text"], 種: "字" },
-  { 碼: "資料送別家", 說: ["表單送到別的網站", "a form posts to another site"], 種: "流向", 格: "拒" },
+  { 碼: "資料送別家", 說: ["表單或送出按鈕送到別的網站", "a form or submit button posts to another site"], 種: "流向", 格: "拒" },
+  { 碼: "看不進去的框", 說: ["跨網站的內嵌框，掃描器看不到裡面", "a cross-site frame the scanner cannot look into"], 種: "流向", 格: "待審" },
   { 碼: "外來程式", 說: ["載入別的網站的程式", "loads a script from another site"], 種: "流向", 格: "待審" },
 ];
 
 // 掃描範圍：要去哪些地方找。掃描器每一處都要有做法，而且會回報自己掃了哪些（表上有、沒做到的，測試會抓）。
-// 2026-11-23 紅隊（另一個 AI）打到「樣式產生的字」和「影子元件」兩個沒掃到的地方，所以這張表是後補的。
+// 2026-11-23 紅隊第二輪（Grok）打到「樣式產生的字」和「影子元件」兩個沒掃到的地方，所以這張表是後補的；第四輪（ChatGPT）再補上「子文件」。
 export const 掃描範圍 = [
   { 處: "文字", 說: ["網頁上的一般文字（含圖形裡的字）", "ordinary text, including text inside graphics"] },
   { 處: "影子元件", 說: ["自成一格、外面看不進去的小區塊裡的字", "text inside shadow components"] },
   { 處: "樣式產生的字", 說: ["用樣式在前後加上的字（偽元素）", "text added by styles before/after an element"] },
   { 處: "標籤屬性", 說: ["標籤、標題、替代文字", "labels, titles, alt text"] },
-  { 處: "表單", 說: ["表單送去哪裡", "where forms post"] },
+  { 處: "子文件", 說: ["內嵌框裡的頁面：同網站的鑽進去掃，跨網站的列出來", "framed pages: same-site ones are scanned, cross-site ones are listed"] },
+  { 處: "表單", 說: ["表單和送出按鈕送去哪裡", "where forms and submit buttons post"] },
   { 處: "程式", 說: ["載入了哪些程式", "which scripts load"] },
 ];
 
@@ -43,6 +45,15 @@ export const 例外們 = [
 export const 例外條件們 = [
   { 名: "無障礙短提示", 說: ["用裁切或零大小藏起來、短於機器字最短、又不像指令的字：是給讀屏軟體的，不算", "short, non-instruction text hidden by clipping or zero size: a screen-reader hint, not an attack"] },
 ];
+
+// 子文件最多鑽幾層、最多掃幾份（防止網頁用無限套框把掃描器拖死；超過的照「看不進去的框」列出來）
+export const 子文件上限 = { 層: 3, 份: 20 };
+
+// 掃描模式：
+//   跑程式（預設）：本站的程式會跑，才看得到用程式長出來的東西（例如影子元件）；外來網站的東西一律不載入，
+//                  本站也只准讀（GET），任何寫入（POST 等）都擋下並列出來。
+//   不跑程式：完全不執行網頁程式，只看原本的結構；用程式長出來的東西就看不到。
+export const 掃描模式們 = ["跑程式", "不跑程式"];
 
 // 只給機器看的字，短於這個長度不算（像「關閉」「選單」這種按鈕名字）
 export const 機器字最短 = 30;
