@@ -19,6 +19,17 @@ export const 規則們 = [
   { 碼: "外來程式", 說: ["載入別的網站的程式", "loads a script from another site"], 種: "流向", 格: "待審" },
 ];
 
+// 掃描範圍：要去哪些地方找。掃描器每一處都要有做法，而且會回報自己掃了哪些（表上有、沒做到的，測試會抓）。
+// 2026-11-23 紅隊（另一個 AI）打到「樣式產生的字」和「影子元件」兩個沒掃到的地方，所以這張表是後補的。
+export const 掃描範圍 = [
+  { 處: "文字", 說: ["網頁上的一般文字（含圖形裡的字）", "ordinary text, including text inside graphics"] },
+  { 處: "影子元件", 說: ["自成一格、外面看不進去的小區塊裡的字", "text inside shadow components"] },
+  { 處: "樣式產生的字", 說: ["用樣式在前後加上的字（偽元素）", "text added by styles before/after an element"] },
+  { 處: "標籤屬性", 說: ["標籤、標題、替代文字", "labels, titles, alt text"] },
+  { 處: "表單", 說: ["表單送去哪裡", "where forms post"] },
+  { 處: "程式", 說: ["載入了哪些程式", "which scripts load"] },
+];
+
 // 例外：人點一下就看得到的，不算藏字（不然會自體免疫，把正常網頁當壞人；2026-11-22 實測下拉選單誤報）
 export const 例外們 = [
   { 選: "option", 說: ["下拉選單的選項，點開就看得到", "drop-down options, visible when opened"] },
@@ -51,5 +62,8 @@ export function 檢查側面法典() {
     if (r.說?.length !== 2) 問題.push(`${r.碼}：說明要有中文和英文`);
   }
   for (const e of 例外們) if (!e.選 || e.說?.length !== 2) 問題.push("例外要有選擇器和中英說明");
+  const 處們 = 掃描範圍.map((x) => x.處);
+  if (new Set(處們).size !== 處們.length) 問題.push("掃描範圍重複");
+  for (const x of 掃描範圍) if (x.說?.length !== 2) 問題.push(`${x.處}：說明要有中文和英文`);
   return 問題;
 }
