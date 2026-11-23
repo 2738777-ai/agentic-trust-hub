@@ -1,8 +1,10 @@
 // 側面掃描器：在網頁裡面跑（瀏覽器或無頭瀏覽器），照側面法典把「人看不到、機器讀得到」的東西列出來。
 // 這個函式會被整個送進網頁裡執行，所以不能用外面的變數；需要的東西都從參數傳進來。
-// 參數：{ 範圍: ["文字", ...], 例外選擇器: [...], 例外條件: ["無障礙短提示", ...], 機器字最短: 數字, 子文件上限: { 層, 份 } }
+// 參數：{ 範圍, 例外選擇器, 例外條件, 機器字最短, 子文件上限: { 層, 份 }, 像指令源, 像編碼源, 原始碼位置們 }（都從側面法典來）
 // 回傳：{ 發現們: [{ 碼, 位置, 內容 }], 掃過: ["文字", ...] }   ← 掃過＝真的有做的範圍，測試拿來對表
-export function 掃描頁面({ 範圍 = [], 例外選擇器 = [], 例外條件 = [], 機器字最短 = 30, 子文件上限 = { 層: 3, 份: 20 } } = {}) {
+export function 掃描頁面({ 範圍 = [], 例外選擇器 = [], 例外條件 = [], 機器字最短 = 30, 子文件上限 = { 層: 3, 份: 20 },
+  像指令源 = "(ignore|instruction|system|send|api key)", 像編碼源 = "[A-Za-z0-9+/]{40,}={0,2}", 原始碼位置們 = [] } = {}) {
+  const 像指令 = new RegExp(像指令源, "i"), 像編碼 = new RegExp(像編碼源);
   const 出 = [], 掃過 = new Set();
   const 要 = (處) => 範圍.includes(處);
   const 例外 = 例外選擇器.join(",");
@@ -31,6 +33,13 @@ export function 掃描頁面({ 範圍 = [], 例外選擇器 = [], 例外條件 =
     for (let e = el; e; e = 父(e)) { if (縮放(樣式(e)) < 0.05) return true; if (是本文(e)) break; }
     const r = el.getBoundingClientRect();
     if ((r.width < 2 || r.height < 2) && /hidden|clip/.test(cs.overflow + cs.overflowX + cs.overflowY)) return true;
+    // 外面某一層框會裁掉超出的部分，而這段字整個在框外（2026-11-23 Meta AI：放到框外 500 像素）
+    for (let e = 父(el); e && !是本文(e); e = 父(e)) {
+      const ecs = 樣式(e);
+      if (!/hidden|clip/.test(ecs.overflow + ecs.overflowX + ecs.overflowY)) continue;
+      const b = e.getBoundingClientRect();
+      if (r.right <= b.left || r.left >= b.right || r.bottom <= b.top || r.top >= b.bottom) return true;
+    }
     return false;
   };
   const 路 = (el) => { const p = []; for (let e = el; e && !是本文(e); e = 父(e)) p.unshift(e.tagName.toLowerCase() + (e.id ? "#" + e.id : "")); return p.slice(-3).join(" › "); };
@@ -58,7 +67,20 @@ export function 掃描頁面({ 範圍 = [], 例外選擇器 = [], 例外條件 =
     return 差(色(cs.color), 下 || [255, 255, 255]) < 24;
   };
   const 是無障礙短提示 = (碼們, t) => 例外條件.includes("無障礙短提示") && 碼們.length && 碼們.every((c) => c === "裁掉或縮成零")
-    && t.trim().length < 機器字最短 && !/(ignore|instruction|assistant|system|send|forward|email|pay|api key|忽略|指令|金鑰)/i.test(t);
+    && t.trim().length < 機器字最短 && !像指令.test(t) && !像編碼.test(t);
+  // 遮擋：像指令的字，中心點上面是不是別的東西（只查像指令的，免得把被橫幅蓋到的一般文字當壞人）
+  const 被蓋住 = (el) => {
+    const 文件 = el.ownerDocument, 視窗 = 窗(el), 原x = 視窗.scrollX, 原y = 視窗.scrollY;
+    el.scrollIntoView({ block: "center", inline: "center" });
+    try { return 量蓋(el, 文件, 視窗); } finally { 視窗.scrollTo(原x, 原y); }   // 量完捲回原位，不影響後面的判斷
+  };
+  const 量蓋 = (el, 文件, 視窗) => {
+    const r = el.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) return false;
+    const 點們 = [[r.left + r.width / 2, r.top + r.height / 2], [r.left + 2, r.top + 2], [r.right - 2, r.bottom - 2]];
+    const 蓋 = 點們.filter(([x, y]) => x >= 0 && y >= 0 && x < 視窗.innerWidth && y < 視窗.innerHeight).map(([x, y]) => 文件.elementFromPoint(x, y));
+    return 蓋.length > 0 && 蓋.every((t) => t && t !== el && !el.contains(t) && !t.contains(el));
+  };
   const 記 = (碼們, el, t, 加註 = "") => {
     if (隱.test(t)) 碼們.push("隱形字");
     隱.lastIndex = 0;
@@ -75,10 +97,12 @@ export function 掃描頁面({ 範圍 = [], 例外選擇器 = [], 例外條件 =
       if (n.nodeType === 1) {
         元素們.push(n);
         if (n.shadowRoot && 要("影子元件")) { 掃過.add("影子元件"); 走(n.shadowRoot, 加註 + "（影子元件裡）", 框藏, 層); }
-        if ((n.tagName === "IFRAME" || n.tagName === "FRAME") && 要("子文件")) {
+        const 是框 = ["IFRAME", "FRAME", "OBJECT", "EMBED", "FENCEDFRAME", "PORTAL"].includes(n.tagName);
+        const 是圖片物件 = n.tagName === "OBJECT" && /^image\//.test(n.getAttribute("type") || "");
+        if (是框 && !是圖片物件 && 要("子文件")) {
           掃過.add("子文件");
-          let 子 = null; try { 子 = n.contentDocument; } catch { 子 = null; }
-          const 來源 = n.getAttribute("src") || (n.hasAttribute("srcdoc") ? "（直接寫在框裡的頁面）" : "（空白框）");
+          let 子 = null; try { 子 = ["IFRAME", "FRAME", "OBJECT"].includes(n.tagName) ? n.contentDocument : null; } catch { 子 = null; }
+          const 來源 = n.getAttribute("src") || n.getAttribute("data") || (n.hasAttribute("srcdoc") ? "（直接寫在框裡的頁面）" : "（空白框）");
           if (子 && 子.body && 層 < 子文件上限.層 && 子文件份數 < 子文件上限.份) {
             子文件份數++;
             const r = n.getBoundingClientRect();
@@ -91,10 +115,15 @@ export function 掃描頁面({ 範圍 = [], 例外選擇器 = [], 例外條件 =
       const t = n.textContent; if (!t.trim()) continue;
       const el = n.parentElement || (n.getRootNode().host);
       if (["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE"].includes(el.tagName)) continue;
-      if (例外 && el.closest(例外)) continue;
+      if (例外 && el.closest(例外)) {
+        // 例外只饒不像指令的字（Meta AI 第五輪：例外整塊不掃，就變成後門）
+        if (像指令.test(t) || 像編碼.test(t)) 記(["要點開才看得到"], el, t, 加註);
+        continue;
+      }
       const cs = 樣式(el);
       let 碼們 = 看不到(el, cs, el instanceof SVGElement);
       if (框藏 && !碼們.includes("藏起來") && !碼們.includes("裁掉或縮成零")) 碼們.push("裁掉或縮成零");
+      if (!碼們.length && 要("遮擋") && 像指令.test(t)) { 掃過.add("遮擋"); if (被蓋住(el)) 碼們.push("被蓋住"); }
       if (!碼們.length && 疑似同色(el, cs)) 碼們.push("疑似同色");
       if (是無障礙短提示(碼們, t)) 碼們 = [];
       記(碼們, el, t, 加註);
@@ -119,7 +148,18 @@ export function 掃描頁面({ 範圍 = [], 例外選擇器 = [], 例外條件 =
     掃過.add("標籤屬性");
     for (const el of 元素們) for (const k of ["aria-label", "title", "alt"]) {
       const v = el.getAttribute(k);
-      if (v && v.length >= 機器字最短) 出.push({ 碼: "只給機器看", 位置: `${路(el)} @${k}`, 內容: v.slice(0, 200) });
+      if (v && (v.length >= 機器字最短 || 像指令.test(v))) 出.push({ 碼: "只給機器看", 位置: `${路(el)} @${k}`, 內容: v.slice(0, 200) });
+    }
+  }
+  if (要("原始碼")) {
+    掃過.add("原始碼");
+    const 全部 = new Set([...document.querySelectorAll("*"), ...元素們]);   // 網頁標頭不在本文裡，也要看
+    for (const 位 of 原始碼位置們) for (const el of 全部) {
+      if (!el.matches || !el.matches(位.選)) continue;
+      const 取們 = 位.取 === "data-*" ? [...el.attributes].filter((a) => a.name.startsWith("data-")).map((a) => [`@${a.name}`, a.value])
+        : 位.取 === "文字" ? [["", el.textContent]] : 位.取 === "範本" ? [["", el.content ? el.content.textContent : el.textContent]]
+        : [[`@${位.取}`, el.getAttribute(位.取)]];
+      for (const [標, v] of 取們) if (v && 像指令.test(v)) 出.push({ 碼: "藏在原始碼裡", 位置: 路(el) + 標, 內容: v.replace(/\s+/g, " ").trim().slice(0, 200) });
     }
   }
   if (要("表單")) {

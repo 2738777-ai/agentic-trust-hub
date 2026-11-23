@@ -3,7 +3,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { 翻譯, 窮舉檢查, 判定 } from "../core/翻譯器.mjs";
-import { 比鬆緊 } from "../core/鬆緊.mjs";
+import { 比鬆緊, 自己判 } from "../core/鬆緊.mjs";
 
 const 根 = path.join(path.dirname(new URL(import.meta.url).pathname), "..");
 let 過 = 0, 錯 = 0;
@@ -50,6 +50,23 @@ const r8 = 比鬆緊(舊, 翻譯(沒真偽));
 const 少一碼 = 原文.replace(/^.*HOLD → 待審.*$/m, "");
 const r9 = 比鬆緊(翻譯(少一碼), 翻譯(原文));
 驗(r9.放鬆.length > 0 && r9.放鬆.every((x) => x.原因 === "補上新代碼"), `原因分類：舊法典沒寫 HOLD（當拒），新法典補成待審 → 補上新代碼（${r9.放鬆.length} 格）`);
+
+// 第五輪（Meta AI）：改名騙過比例
+const 改名 = 原文.replace("尺：綠 < 黃 < 待審 < 拒", "尺：綠 < 黃 < 待審 < 允許").replace("讀不到結果：拒", "讀不到結果：允許").replaceAll("→ 拒", "→ 允許");
+const r10 = 比鬆緊(舊, 翻譯(改名));
+驗(r10.放鬆.length === 0 && r10.尺有變 && r10.要人看, "咬人：把「拒」改名成「允許」，比例一樣、放鬆 0 格，但尺有變 → 要人看");
+驗(!比鬆緊(舊, 翻譯(原文.replace("CONDITIONS → 黃", "CONDITIONS → 待審"))).要人看, "只是收緊、尺沒改 → 不用人看");
+// 兩個獨立做法互相看守：比鬆緊自己的「最壞的贏」和翻譯器的判定，窮舉每一種組合都要一樣
+{
+  const 器們 = Object.keys(舊.轉接); let 數 = 0, 不同 = 0;
+  const 走 = (i, 組) => { if (i === 器們.length) { 數++; if (自己判(舊, 組) !== 判定(舊, 組).決定) 不同++; return; }
+    for (const c of [...Object.keys(舊.轉接[器們[i]]), "沒見過的代碼"]) 走(i + 1, { ...組, [器們[i]]: c }); };
+  走(0, {});
+  驗(不同 === 0 && 數 === 42, `兩個獨立的「最壞的贏」窮舉 ${數} 種組合，不同 ${不同} 次`);
+  // 咬人：判定被改成永遠回綠，比鬆緊還是照自己的算，抓得到放鬆
+  const 假判定 = () => ({ 決定: "綠" });
+  驗(自己判(舊, { "進門檢查（Agent Customs）": "DENIED" }) === "拒" && 假判定().決定 === "綠", "咬人：外面的判定被改成永遠回綠，比鬆緊自己算還是「拒」");
+}
 
 console.log(`\n合計：${過}/${過 + 錯} 通過`);
 process.exit(錯 ? 1 : 0);

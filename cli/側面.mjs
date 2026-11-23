@@ -9,7 +9,7 @@ import { readFile, stat, realpath } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { 掃描頁面 } from "../core/側面掃描.mjs";
-import { 例外們, 例外條件們, 機器字最短, 判側面, 掃描範圍, 子文件上限, 掃描模式們 } from "../core/側面法典.mjs";
+import { 例外們, 例外條件們, 機器字最短, 判側面, 掃描範圍, 子文件上限, 掃描模式們, 像指令, 像編碼, 原始碼位置們 } from "../core/側面法典.mjs";
 
 const 型別 = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".mjs": "text/javascript",
   ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".woff2": "font/woff2" };
@@ -42,7 +42,7 @@ export async function 開資料夾(資料夾) {
   return new Promise((ok) => 伺服器.listen(0, "127.0.0.1", () => ok({ 伺服器, 網址: `http://127.0.0.1:${伺服器.address().port}/` })));
 }
 
-export async function 側面掃描(目標, { 例外選擇器 = 例外們.map((e) => e.選), 例外條件 = 例外條件們.map((x) => x.名), 範圍 = 掃描範圍.map((x) => x.處), 模式 = "跑程式" } = {}) {
+export async function 側面掃描(目標, { 例外選擇器 = 例外們.map((e) => e.選), 例外條件 = 例外條件們.map((x) => x.名), 範圍 = 掃描範圍.map((x) => x.處), 模式 = "跑程式", 打開關閉影子 = true } = {}) {
   if (!掃描模式們.includes(模式)) throw new Error("掃描模式只能是：" + 掃描模式們.join("、"));
   let chromium;
   try { ({ chromium } = await import("playwright-core")); }
@@ -55,6 +55,12 @@ export async function 側面掃描(目標, { 例外選擇器 = 例外們.map((e)
   const 瀏覽器 = await chromium.launch({ executablePath: 執行檔, args: ["--no-sandbox"] });
   try {
     const 頁 = await 瀏覽器.newPage({ viewport: { width: 390, height: 844 }, javaScriptEnabled: 模式 === "跑程式" });
+    // 關起來的影子元件，外面拿不到；在網頁程式跑之前，把「關起來」改成「打開」，掃描器才鑽得進去（Meta AI 第五輪）
+    // （只在跑程式模式有用；不跑程式時用寫在網頁裡的關閉影子元件，目前看不到，老實列在工單）
+    if (打開關閉影子) await 頁.addInitScript(() => {
+      const 原 = Element.prototype.attachShadow;
+      Element.prototype.attachShadow = function (選項) { return 原.call(this, { ...選項, mode: "open" }); };
+    });
     const 家 = new URL(網址).origin, 擋下們 = [];
     await 頁.route("**/*", (r) => {
       const q = r.request(), u = new URL(q.url());
@@ -67,8 +73,8 @@ export async function 側面掃描(目標, { 例外選擇器 = 例外們.map((e)
     await 頁.goto(網址, { waitUntil: "load", timeout: 30000 });
     await 頁.waitForTimeout(500);
     // 不跑程式時，evaluate 仍可執行（那是掃描器自己，不是網頁的程式）
-    const { 發現們, 掃過 } = await 頁.evaluate(掃描頁面, { 範圍, 例外選擇器, 例外條件, 機器字最短, 子文件上限 });
-    const 沒掃到 = 範圍.filter((x) => !掃過.includes(x) && x !== "影子元件" && x !== "子文件");   // 頁面沒有影子元件、內嵌框時本來就不會進去
+    const { 發現們, 掃過 } = await 頁.evaluate(掃描頁面, { 範圍, 例外選擇器, 例外條件, 機器字最短, 子文件上限, 像指令源: 像指令.source, 像編碼源: 像編碼.source, 原始碼位置們 });
+    const 沒掃到 = 範圍.filter((x) => !掃過.includes(x) && !["影子元件", "子文件", "遮擋"].includes(x));   // 頁面沒有影子元件、內嵌框、像指令的字時本來就不會進去
     if (沒掃到.length) throw new Error("掃描器沒照表做完：" + 沒掃到.join("、"));
     return { 網址: 是網址 ? 網址 : 目標, 模式, 掃過, 擋下們, ...判側面(發現們) };
   } finally {

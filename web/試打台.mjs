@@ -74,12 +74,13 @@ function 換法典(文字) {
     const r = 核.窮舉檢查(新法);
     if (r.違反.length) throw new 核.法典錯誤(`窮舉找到 ${r.違反.length} 個違反：${r.違反[0][0]}`, `Exhaustive check found ${r.違反.length} violation(s)`);
     const 比 = 法 ? 核.比鬆緊(法, 新法) : { 放鬆: [], 收緊: [] };
-    if (比.放鬆.length && 待確認 !== 文字) {
+    if (比.要人看 && 待確認 !== 文字) {
       待確認 = 文字;
       const 例 = 比.放鬆.slice(0, 3).map((x) => `${Object.values(x.組).join(選("＋", " + "))}${選("：", ": ")}${格字(x.舊)} → ${格字(x.新)}${選(`（${x.原因}）`, ` (${({尺變了:"scale changed",補上新代碼:"new code added",拔掉工具:"checker removed",改寬:"mapped looser"})[x.原因]})`)}`).join(選("；", "; "));
       狀.className = "法狀態 警";
-      狀.textContent = 選(`這份法典讓 ${比.放鬆.length} 格變寬鬆（${例}）。放鬆不會自動生效：看清楚是你自己要改的，再按一次「確定放鬆」。`,
-        `This law loosens ${比.放鬆.length} cell(s) (${例}). Loosening never applies silently: if you really meant it, press "Confirm loosening".`);
+      const 尺話 = 比.尺有變 ? 選("尺本身被改了（格的名字、格數或順序）。", "The scale itself changed (level names, count or order). ") : "";
+      狀.textContent = 尺話 + (比.放鬆.length ? 選(`這份法典讓 ${比.放鬆.length} 格變寬鬆（${例}）。`, `This law loosens ${比.放鬆.length} cell(s) (${例}). `) : "")
+        + 選("放鬆和改尺都不會自動生效：看清楚是你自己要改的，再按一次「確定放鬆」。", "Loosening and scale changes never apply silently: if you really meant it, press \"Confirm loosening\".");
       $("重判").textContent = 選("確定放鬆", "Confirm loosening");
       return false;
     }

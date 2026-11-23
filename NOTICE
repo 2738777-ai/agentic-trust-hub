@@ -17,6 +17,6 @@ Copyright 2026 2738777-ai
 4. 示範網站描述檔 — examples/*/tidewhistle_guesthouse.network.json、agent-manifest.json
    取自開放代理網路官方範例 guesthouse_agentified，Apache License 2.0（examples/LICENSE-agentic-web.txt）
    B、C、D 三個版本是故意改壞的示範，不是原作者的內容。
-5. 普通網頁示範 — examples/web_clean、web_clean_hero、web_hacked、web_hacked_css、web_hacked_geo、web_hacked_frame
+5. 普通網頁示範 — examples/web_clean、web_clean_hero、web_hacked、web_hacked_css、web_hacked_geo、web_hacked_frame、web_hacked_meta
    取自開放代理網路官方範例 guesthouse（沒有代理的普通民宿網頁），Apache License 2.0。
    web_clean_hero 加了一段照片上的白字和讀屏軟體用的短句（測誤擋）；web_hacked*/index.html 被我們故意塞了假的藏字手腳（壞網址都用 .invalid），只用來測側面掃描，不是原作者的內容。

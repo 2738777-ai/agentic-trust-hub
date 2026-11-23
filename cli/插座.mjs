@@ -52,8 +52,8 @@ try {
     console.log(`窮舉 ${r.組合數} 種組合：放鬆 ${r.放鬆.length} 格、收緊 ${r.收緊.length} 格`);
     if (r.尺有變) console.log("注意：尺本身被改了（格數、順序或「讀不到結果」），請先確認這是你要的。");
     for (const x of r.放鬆) console.log(`  放鬆（${x.原因}）：${Object.values(x.組).join("＋")}　${x.舊} → ${x.新}`);
-    console.log(r.放鬆.length ? "有放鬆：不准直接換上，要人看過這些格子、按頭才換。" : "沒有放鬆：可以直接換上。");
-    process.exitCode = r.放鬆.length ? 結束碼表.待審 : 0;   // 有放鬆＝要人看過才換
+    console.log(r.要人看 ? "要人看：有放鬆或尺被改了，不准直接換上，看過這些地方、按頭才換。" : "沒有放鬆、尺也沒改：可以直接換上。");
+    process.exitCode = r.要人看 ? 結束碼表.待審 : 0;   // 有放鬆或尺被改＝要人看過才換
   } else if (指令 === "掃" && 目標) {
     // 普通網頁（沒有代理、沒有簽章）轉到側面看：node cli/插座.mjs 掃 examples/web_hacked   或   掃 https://某個網址
     const r = await 側面掃描(目標, { 模式: 旗們.includes("--不跑程式") ? "不跑程式" : "跑程式" });
