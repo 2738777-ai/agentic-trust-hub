@@ -1,0 +1,18 @@
+# 萬用插座・模型代付服務（Cloudflare Worker）
+# 部署：Cloudflare 後台「Workers & Pages → Create → Import a repository」選 2738777-ai/agentic-trust-hub，
+# 「Root directory（根目錄）」填 worker。祕密 OTARI_KEY 在後台另外設（Secret），不寫在這裡。
+name = "trust-hub-llm"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://2738777-ai.github.io"
+
+# 規矩 5：原子計數器（免費方案只能用 SQLite 版的 Durable Object）
+[[durable_objects.bindings]]
+name = "LIMITS"
+class_name = "HubLimits"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["HubLimits"]
