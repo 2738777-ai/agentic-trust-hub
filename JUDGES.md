@@ -59,7 +59,7 @@ Exit codes: GREEN 0 · YELLOW 10 · REVIEW 20 · DENY 30 · error 40. A program 
 |---|---|---|---|
 | Tool / agent-file poisoning (MCP tool poisoning class) | A publisher hides an instruction in a tool or agent description and signs it | `examples/C_self_signed`; live show | Caught: the signature is valid, so only the entry check catches it, and the law makes that enough |
 | Cryptographic Context Injection (Adversa AI, disclosed Aug 2026; Grok, Gemini) | A page carries an AES-encrypted payload plus the key and asks the agent to decrypt and obey. Text filters can't read it | `examples/web_hacked_encoded` (random fake bytes, nothing to decrypt) | Half done: a hidden blob and the "decrypt and follow" sentence are DENY. **Not caught:** a blob shown openly on the page, or one in a `data-` attribute that isn't instruction-like (widening risks false alarms on hashes) |
-| Device-code phishing against AI coding agents (Microsoft Security, 17 Nov 2026; GitHub Copilot CLI lab study) | The real sign-in page and a real approval, but the attacker started the request | — | **Not built.** Needs the next piece: an approval gate that binds "yes" to *who started it* and *what it is right now*. Neither the side scan nor the entry check can see this |
+| Device-code phishing against AI coding agents (Microsoft Security, 17 Nov 2026; GitHub Copilot CLI lab study) | The real sign-in page and a real approval, but the attacker started the request | `arena.html`: "Trick the owner into approving…" | **Replayed in the simulation.** Every token carries a birth record (who started it, who approved). The first trick lands; the defender traces the chain back to the approval, diagnoses *approval was tricked* (not a stolen key), disables only that token, and flips the approval law's "initiator doesn't match" cell to DENY. The same trick is then stopped at the approval gate. **Not built:** wiring this gate into a real sign-in flow |
 
 Sources: [Microsoft Security blog, 17 Nov 2026](https://microsoft.com/en-us/security/blog/2026/11/17/the-risks-of-device-code-authentication-for-ai-coding-agents) · [Cloud Security Alliance note on Cryptographic Context Injection, 21 Aug 2026](https://labs.cloudsecurityalliance.org/research/csa-research-note-cryptographic-context-injection-ai-guardrail-bypass/)
 
@@ -104,7 +104,7 @@ Sources: [Microsoft Security blog, 17 Nov 2026](https://microsoft.com/en-us/secu
 |---|---|---|---|
 | 工具描述下毒 | 發布者把指令藏進工具或代理描述，還簽了真的章 | `examples/C_self_signed`、直播 | 抓得到：簽章是真的，只有進門檢查抓到；法典讓這一個就夠 |
 | 加密指令（Adversa AI，2026 年 8 月公開，打 Grok、Gemini） | 網頁放加密資料加鑰匙，請代理自己解開照做；文字過濾讀不懂 | `examples/web_hacked_encoded`（亂數假資料，解不出東西） | 做了一半：藏起來的加密資料、「解開照做」那句都判拒。**還抓不到：** 加密資料大方顯示在畫面上，或放在資料屬性裡又不像指令（放寬怕誤報雜湊值） |
-| 裝置碼釣魚（微軟資安，2026-11-17，拿 Copilot CLI 做實驗） | 真的登入頁、真的核准，但發起的人是駭客 | 無 | **還沒做。** 要靠下一塊「確認那一下」：把「好」綁在誰發起、現在內容是什麼。側面掃描和進門檢查都看不到這招 |
+| 裝置碼釣魚（微軟資安，2026-11-17，拿 Copilot CLI 做實驗） | 真的登入頁、真的核准，但發起的人是駭客 | 攻防台：「騙主人按下核准…」 | **模擬裡可以重演了。** 每一張通行證都有出生紀錄（誰發起、誰按好）。第一次騙到；防守方沿繩追到那一次核准，診斷是「核准被騙」而不是鑰匙被偷，只停用那張通行證，把核准法典「發起者對不上」翻成拒。同一招再來，在核准關卡就擋。**還沒做：** 接到真的登入流程上 |
 
 ### 老實說它不是什麼
 

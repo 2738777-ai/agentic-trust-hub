@@ -7,10 +7,12 @@ The same hub engine (`core/翻譯器.mjs`, unchanged) guards different places ju
 Everything is simulated: fake guesthouse, fake keys and guests, `.invalid` addresses only, servers bound to localhost.
 
 ## 攻防循環 · Attack-and-defend loop（`攻防循環/`）
-評審網頁：[`arena.html`](../arena.html)。測試：`node tests/攻防.mjs`（21 項，含兩口「咬一口」）。
+評審網頁：[`arena.html`](../arena.html)。測試：`node tests/攻防.mjs`（33 項，含兩口「咬一口」和「主人自己核准不能被擋」）。
 - 三種模式＝同一張法典的三種鬆緊：沒補強（每格判綠、只記錄）、補強 1.0、補強 2.0。
 - 被打一次 → 追因果繩 → 繩上經過的格子翻成完整法典的緊度（`比鬆緊` 證明放鬆 0）→ 照 `凍結法典.txt` 連坐作廢鑰匙（只連繩子碰到的）→ 下架評論、通知客戶。
 - 恢復預設值、換一種說法再打，插座補的是別的格子：補哪裡跟著駭客打哪裡走。
+- 第四招「騙主人按核准」（核准法典＝確認那一下）：每張通行證都有出生紀錄（誰發起、誰按好）。防守方沿繩追到那次核准，診斷「核准被騙」，只停用那張通行證（不換新），翻緊「發起者對不上」；主人自己申請、自己核准照樣能用（不自體免疫）；主人看到的用途和真的要發的不一致 → 指紋檢查判拒（先查後掉包）。
+- Fourth technique, "trick the owner into approving" (approval law): every token has a birth record; the defender traces back to the approval, diagnoses *approval was tricked*, disables only that token and tightens the initiator-match cell. Owner self-approval still works.
 - Three modes are one law at three tightness levels. A breach → trace the causal chain → flip exactly the cells on it to the full law's level (proven loosen-free) → revoke keys by `凍結法典.txt` (only what the chain touched) → take down the review, notify guests.
 
 ## 伺服器門口 · Server door（`伺服器門口/`）
