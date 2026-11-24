@@ -9,7 +9,9 @@
 //  4. 只替「萬用插座自己的兩個代理」付錢，而且提示由伺服器組：
 //     瀏覽器送來的系統提示必須和 worke./fixed-prompts.js 一字不差（那份由官方執行程式自己組出來），否則 403；
 //     轉給上游的系統提示和工具定義一律用伺服器那一份；對話只收必要欄位（使用者的話、助手的回覆和工具呼叫、工具結果），
-//     工具呼叫的名字只能是那個代理自己的工具，多的欄位丟掉，長度和則數都有上限。
+//     工具呼叫的名字只能是那個代理自己的工具，多的欄位丟掉，長度和則數都有上限；
+//     工具結果必須對應前面還沒回覆的同名呼叫，每個呼叫 ID 只能出現一次、回覆一次（對話順序）。
+//     工具結果的「內容是不是真的」這裡驗不了（要可信的執行端給證據）；捏造的結果一樣受額度和餘額封頂。
 //  5. 額度用 Durable Object 原子計數（同一個物件裡讀和寫中間沒有空檔，多人同時聊天也不會多放）：
 //     每個 IP 每天幾次、全站每天幾次。用完回 429、純文字、中英兩句，聊天視窗會原樣顯示。
 //  6. 沒有 OTARI_KEY、或沒綁計數器 LIMITS → 拒絕服務（出事就關門，不會變成「沒有上限」）。
@@ -67,6 +69,8 @@ export function 清洗對話(代理, 訊息們) {
   const 工具名 = new Set(代理.工具們.map((t) => t.function.name));
   const 字 = (x, 上限) => typeof x === "string" && x.length <= 上限;
   const 乾淨 = [{ role: "system", content: 代理.系統提示 }];
+  // 對話順序：工具結果必須對應前面「還沒回覆」的同名工具呼叫；每個呼叫 ID 只出現一次、只能回覆一次
+  const 見過的ID = new Set(), 等回覆 = new Map();   // id → 工具名
   for (const m of 訊息們.slice(1)) {
     if (m?.role === "user") {
       if (!字(m.content, 規矩.每則上限)) return null;
@@ -79,12 +83,16 @@ export function 清洗對話(代理, 訊息們) {
         出.tool_calls = [];
         for (const c of m.tool_calls) {
           if (!字(c?.id, 200) || !工具名.has(c?.function?.name) || !字(c.function.arguments ?? "", 規矩.參數上限)) return null;
+          if (見過的ID.has(c.id)) return null;
+          見過的ID.add(c.id); 等回覆.set(c.id, c.function.name);
           出.tool_calls.push({ id: c.id, type: "function", function: { name: c.function.name, arguments: c.function.arguments ?? "" } });
         }
       }
       乾淨.push(出);
     } else if (m?.role === "tool") {
       if (!字(m.tool_call_id, 200) || !工具名.has(m.name) || !字(m.content, 規矩.工具結果上限)) return null;
+      if (等回覆.get(m.tool_call_id) !== m.name) return null;      // 沒有對應的呼叫、名字不同、或已經回覆過
+      等回覆.delete(m.tool_call_id);
       乾淨.push({ role: "tool", tool_call_id: m.tool_call_id, name: m.name, content: m.content });
     } else return null;                    // 系統提示只能有開頭那一個；其他角色一律不收
   }
