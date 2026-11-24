@@ -1,0 +1,80 @@
+{
+  "brand": "Agentic Trust Hub Assistant",
+  "networks": [
+    {
+      "name": "trust_hub",
+      "front_man": "trust_hub_assistant",
+      "hocon": "./trust_hub.network.json",
+      "description": "Ask the Agentic Trust Hub to check a demo agent website, explain its law, or audit a proposed law change.",
+      "tags": [
+        "agentified-website",
+        "trust",
+        "security"
+      ],
+      "sample_queries": [
+        "What does the Agentic Trust Hub check, and what does each result level mean?",
+        "Check the demo site where the attacker re-signed the agent file. Was any checker fooled?",
+        "Run all five demo sites and show me a table of each checker's verdict and the final decision.",
+        "Someone wants to change 'Agent Customs says DENIED → DENY' to REVIEW. Is that safe to accept?",
+        "Can you scan my own live website for hidden instructions?"
+      ]
+    }
+  ],
+  "llm_router": {
+    "base_url": "https://api.otari.ai/api/v1",
+    "mock": false,
+    "byok_router": "https://api.otari.ai/api/v1"
+  },
+  "allowed_peers": [],
+  "peer_policy": {
+    "mode": "closed",
+    "deny_origins": [],
+    "note": "Local agents and page-local actions only."
+  },
+  "agent_mcp": {
+    "protocol": "nsdeploy-agent-mcp/v1",
+    "network": "trust_hub",
+    "front_man": "trust_hub_assistant",
+    "available": false,
+    "reason": "This is a static bundle; a public MCP facade requires an application host. The hub's own MCP server runs locally from the repository (mcp/)."
+  },
+  "theme": {
+    "primary": "#1f4e79"
+  },
+  "linking": {
+    "protocol": "nsdeploy-link/v1",
+    "exports": [
+      {
+        "network": "trust_hub",
+        "front_man": "trust_hub_assistant",
+        "aliases": [
+          "trust_hub",
+          "trust_hub_assistant"
+        ],
+        "url": "trust_hub"
+      }
+    ],
+    "imports": [],
+    "link_updates": {
+      "mode": "browser-local"
+    }
+  },
+  "deployment": {
+    "mode": "static",
+    "self_contained_runtime": true,
+    "browser_mock": false,
+    "direct_byok": true,
+    "direct_mcp_requires_cors": true,
+    "public_mcp_facade": false
+  },
+  "actions": {
+    "version": 1,
+    "module": "./site-actions.js",
+    "bridge": "./bridge/action-bridge.html",
+    "agentTools": [
+      "get_hub_overview",
+      "check_demo_site",
+      "compare_law_change"
+    ]
+  }
+}

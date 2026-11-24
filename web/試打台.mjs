@@ -39,6 +39,11 @@ const 網名 = "tidewhistle_guesthouse";
 <li>Same core as a command line: <code>node cli/插座.mjs 檢查 examples/C_self_signed</code></li>`],
   借用: [null, `Borrowed open-source checkers: <a href="https://github.com/montbaga/agent-customs">Agent Customs</a> (Apache 2.0), <a href="https://github.com/cocvn157/nanda-seal">NandaSeal</a> (MIT). Demo site from the <a href="https://github.com/cognizant-ai-labs/agentic-web">official Open Agentic Web example</a> (Apache 2.0).`],
   原始碼: ["原始碼", "Source code"],
+  助標題: ["④ 問插座的助手（代理網站）", "④ Ask the hub's assistant (this page is an agent website)"],
+  助說明: ["這一頁本身也是開放代理網站：助手在你的瀏覽器裡跑，用的就是上面同一份引擎和法典。可以請它檢查示範網站、解釋法典，或審查別人想改的規則安不安全。",
+    "This page is itself an open agentic website. The assistant runs in your browser with the same engine and law as above. Ask it to check a demo site, explain the law, or audit whether a proposed rule change is safe."],
+  助注意: ["你打的字和這一頁的資料會送到你在下方設定選的 AI 服務。助手只能判斷，不能改任何東西。",
+    "Your messages and this page's data go to the AI provider set below. The assistant can only judge; it changes nothing."],
 });
 
 // 代碼的意思（只用來顯示；放不放行看法典，不看這裡）

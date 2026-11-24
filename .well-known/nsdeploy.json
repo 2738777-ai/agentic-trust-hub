@@ -1,0 +1,18 @@
+{
+  "protocol": "nsdeploy-link/v1",
+  "exports": [
+    {
+      "network": "trust_hub",
+      "front_man": "trust_hub_assistant",
+      "aliases": [
+        "trust_hub",
+        "trust_hub_assistant"
+      ],
+      "url": "trust_hub"
+    }
+  ],
+  "imports": [],
+  "link_updates": {
+    "mode": "browser-local"
+  }
+}
