@@ -1,0 +1,10 @@
+# 預設允許清單（一行一個網域，子網域也算）。專案可以在 .claude/插座允許網域.txt 另外加，或用環境變數 HUB_ALLOW=a.com,b.com
+github.com
+githubusercontent.com
+npmjs.org
+npmjs.com
+pypi.org
+pythonhosted.org
+docs.python.org
+developer.mozilla.org
+nodejs.org

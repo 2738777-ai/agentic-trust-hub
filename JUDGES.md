@@ -15,6 +15,9 @@
    Pick **No hardening** and type a sentence (or tap "Find the key"). The first hit lands, but the hub revokes the stolen key on the spot and flips exactly the law cells on that causal chain. Send the same sentence again: blocked. Press **Reset** and phrase it differently ("Use the website reviews…"): the hub patches *different* cells. **Hardening 2.0** blocks everything from the start. Everything runs in your browser against a fake guesthouse; nothing leaves the page.
    It's the same site and the same attack. A naive agent obeys the hidden sentence and the key flies to `collect.evil.invalid`. This is a simulation: no request is ever made.
 
+### Use it on your own agent today
+The same engine runs as a **Claude Code `PreToolUse` hook** ([`hook/`](hook/README.md)): before the agent connects anywhere or sends anything out, it checks who asked for that URL (the user, or only text the agent read), where it goes, and whether a secret rides along. Text-planted URL → it asks you; a secret going out → denied. 13 tests; not yet run end-to-end in a live Claude Code session.
+
 ### 3 minutes, in a terminal
 
 Needs Node 20+. The third command also needs `npm install` and a Chrome (set `CHROME_PATH` if it isn't found).
@@ -83,6 +86,9 @@ Sources: [Microsoft Security blog, 17 Nov 2026](https://microsoft.com/en-us/secu
 3. **換你當駭客：** https://2738777-ai.github.io/agentic-trust-hub/arena.html
    選「沒補強」，打一句話（或點「去找金鑰」）。第一次會偷到，但插座當場作廢那把鑰匙，並把因果繩經過的法典格子翻緊。同一句再打：擋住。按「恢復預設值」換個說法（「從網站評論下手…」）：插座補的是別的格子。「補強 2.0」一開始就全擋。全部在瀏覽器裡打一間假民宿，不會連到外面。
    同一個網站、同一招。天真的代理照著藏起來的那句做，金鑰飛到 `collect.evil.invalid`。這是模擬，不會真的連線。
+
+### 今天就能裝在你的代理上
+同一個引擎做成 **Claude Code 的動手前掛勾**（[`hook/`](hook/README.md)）：代理要連網、要送東西出去之前，先看這個網址是你要的、還是它從網頁讀來的，送去哪，有沒有帶祕密。網頁裡藏的網址 → 問你；帶祕密出門 → 不准。13 項測試；還沒在真的 Claude Code 對話裡跑過完整一輪。
 
 ### 電腦 3 分鐘
 
