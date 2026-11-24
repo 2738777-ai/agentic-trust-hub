@@ -46,7 +46,7 @@ catch (e) { 驗(false, "泡泡測試有失敗：\n" + e.stdout); }
 try { execFileSync(process.execPath, [path.join(根, "tests", "視角.mjs")], { encoding: "utf8" }); 驗(true, "視角測試全部通過（node tests/視角.mjs）"); }
 catch (e) { 驗(false, "視角測試有失敗：\n" + e.stdout); }
 // 4c 鬆緊（紅隊第 1 招的補丁）、4d 側面掃描
-for (const [檔, 名] of [["鬆緊.mjs", "鬆緊測試"], ["側面.mjs", "側面測試"]]) {
+for (const [檔, 名] of [["鬆緊.mjs", "鬆緊測試"], ["側面.mjs", "側面測試"], ["攻防.mjs", "攻防循環測試"]]) {
   try { const o = execFileSync(process.execPath, [path.join(根, "tests", 檔)], { encoding: "utf8" }); 驗(true, `${名}全部通過（${o.trim().split("\n").pop()}）`); }
   catch (e) { 驗(false, `${名}有失敗：\n` + e.stdout); }
 }

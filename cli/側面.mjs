@@ -70,7 +70,9 @@ export async function 側面掃描(目標, { 例外選擇器 = 例外們.map((e)
       擋下們.push({ 原因, 方法: q.method(), 網址: u.href });
       return r.abort();
     });
+    // 等網路安靜下來再掃（2026-11-24）：只等「載入完成」的話，晚一點才畫出來的字會時有時無，結果不穩，也讓晚出現的藏字躲過去
     await 頁.goto(網址, { waitUntil: "load", timeout: 30000 });
+    await 頁.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
     await 頁.waitForTimeout(500);
     // 不跑程式時，evaluate 仍可執行（那是掃描器自己，不是網頁的程式）
     const { 發現們, 掃過 } = await 頁.evaluate(掃描頁面, { 範圍, 例外選擇器, 例外條件, 機器字最短, 子文件上限, 像指令源: 像指令.source, 像編碼源: 像編碼.source, 原始碼位置們 });

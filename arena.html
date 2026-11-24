@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>萬用插座・攻防台</title>
+<link rel="stylesheet" href="web/攻防台.css">
+<script type="module" src="web/攻防台.mjs"></script>
+</head>
+<body>
+<header class="頂">
+  <div>
+    <div class="標" data-字="小標">萬用插座 · 攻防台</div>
+    <h1 data-字="大標">換你當駭客，看插座當場補洞</h1>
+  </div>
+  <button id="換語言" type="button">English</button>
+</header>
+
+<p class="安全" data-字="安全">這裡打的是一間<b>假民宿</b>，整間都在你的瀏覽器裡：鑰匙、客戶都是假的，「送出去」的網址都是不存在的 <code>.invalid</code>，不會連到任何外面的地方。插座的判決是真的程式在跑。</p>
+
+<section class="卡">
+  <div class="列">
+    <span class="欄名" data-字="模式名">防守模式</span>
+    <div class="模式" role="group" data-標籤="模式名">
+      <button type="button" data-模式="沒補強" data-字="沒補強">沒補強</button>
+      <button type="button" data-模式="補強1.0" data-字="補強1">補強 1.0</button>
+      <button type="button" data-模式="補強2.0" data-字="補強2">補強 2.0</button>
+    </div>
+    <button type="button" id="恢復" data-字="恢復">恢復預設值</button>
+  </div>
+  <div class="小" id="模式說明"></div>
+</section>
+
+<section class="卡 駭客台">
+  <label for="指令" class="欄名" data-字="指令名">駭客指令（用一句話說你要什麼）</label>
+  <textarea id="指令" rows="2"></textarea>
+  <div class="範例們" id="範例們"></div>
+  <button type="button" id="出手" data-字="出手">出手</button>
+</section>
+
+<section class="卡 投影卡">
+  <svg id="投影" viewBox="0 0 360 266" role="img" data-標籤="投影名"></svg>
+  <div id="結果" class="結果" aria-live="polite"></div>
+</section>
+
+<section class="卡">
+  <h2 data-字="過程名">駭客這一輪怎麼打</h2>
+  <ol id="過程" class="過程"></ol>
+</section>
+
+<section class="卡">
+  <h2 data-字="防守名">防守方的狀態</h2>
+  <div class="小標題" data-字="鑰匙名">鑰匙</div>
+  <ul id="鑰匙們" class="鑰匙們"></ul>
+  <div class="小標題" data-字="收緊名">插座學起來的（法典被翻過來的格子）</div>
+  <ul id="翻了" class="翻了"></ul>
+  <div class="小標題" data-字="繩名">最近一次的因果繩</div>
+  <ol id="繩" class="繩"></ol>
+  <div id="其他" class="小"></div>
+</section>
+
+<details class="卡">
+  <summary data-字="法典名">看現在的法典（被翻過的那幾行會亮）</summary>
+  <pre id="法典" class="法典"></pre>
+</details>
+
+<p class="小 底" data-字="底">引擎、法典和測試都在 <a href="https://github.com/2738777-ai/agentic-trust-hub/tree/main/experiments/攻防循環">experiments/攻防循環</a>。駭客只會幾種固定的招式類別；評審的一句話會被翻成其中一種。</p>
+</body>
+</html>

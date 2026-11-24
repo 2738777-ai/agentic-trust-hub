@@ -11,6 +11,8 @@
 1. **With the hub:** https://2738777-ai.github.io/agentic-trust-hub/show.html?lang=en
    An agent books a guesthouse. An attacker re-signs the site's agent file with a hidden instruction. The signature check is fooled; the entry check catches it; the law says DENY; the key never leaves.
 2. **Without the hub:** tap **Without the hub** (or open `show.html?lang=en&hub=off`).
+3. **Now you are the attacker:** https://2738777-ai.github.io/agentic-trust-hub/arena.html?lang=en
+   Pick **No hardening** and type a sentence (or tap "Find the key"). The first hit lands, but the hub revokes the stolen key on the spot and flips exactly the law cells on that causal chain. Send the same sentence again: blocked. Press **Reset** and phrase it differently ("Use the website reviews…"): the hub patches *different* cells. **Hardening 2.0** blocks everything from the start. Everything runs in your browser against a fake guesthouse; nothing leaves the page.
    It's the same site and the same attack. A naive agent obeys the hidden sentence and the key flies to `collect.evil.invalid`. This is a simulation: no request is ever made.
 
 ### 3 minutes, in a terminal
@@ -66,7 +68,8 @@ Sources: [Microsoft Security blog, 17 Nov 2026](https://microsoft.com/en-us/secu
 - It is equipment only when the platform wires it into the action gate. Used alone as a command, an agent can skip it.
 - GREEN means "no checker objected", not "this is a good actor".
 - It can't protect a human who is talked into approving something. That's the device-code case above.
-- 39 known attacks and their status are in `紅隊工單.md`. Five AIs (Grok, Gemini, ChatGPT, Meta AI, Claude) attacked it over five rounds; every finding was reproduced before it was patched, and each one became a test.
+- The same engine also guards a server door and checks AI-written patches (see `experiments/`): of 3,000 random path-traversal variants, 588 get through with no protection, 177 with a guard agent alone, 0 with guard + hub. Poisoned patches (e.g. "delete the noisy tests") are rejected by a patch-acceptance law.
+- 40 known attacks and their status are in `紅隊工單.md`. Five AIs (Grok, Gemini, ChatGPT, Meta AI, Claude) attacked it over five rounds; every finding was reproduced before it was patched, and each one became a test.
 
 ---
 
@@ -77,6 +80,8 @@ Sources: [Microsoft Security blog, 17 Nov 2026](https://microsoft.com/en-us/secu
 1. **有插座：** https://2738777-ai.github.io/agentic-trust-hub/show.html
    代理幫忙訂民宿，駭客把網站的代理描述檔塞進一句藏起來的指令，又重新簽了名。真偽檢查被騙，進門檢查抓到，法典判「拒」，金鑰沒有出門。
 2. **沒插座：** 按「沒插座」（或開 `show.html?hub=off`）。
+3. **換你當駭客：** https://2738777-ai.github.io/agentic-trust-hub/arena.html
+   選「沒補強」，打一句話（或點「去找金鑰」）。第一次會偷到，但插座當場作廢那把鑰匙，並把因果繩經過的法典格子翻緊。同一句再打：擋住。按「恢復預設值」換個說法（「從網站評論下手…」）：插座補的是別的格子。「補強 2.0」一開始就全擋。全部在瀏覽器裡打一間假民宿，不會連到外面。
    同一個網站、同一招。天真的代理照著藏起來的那句做，金鑰飛到 `collect.evil.invalid`。這是模擬，不會真的連線。
 
 ### 電腦 3 分鐘
@@ -106,4 +111,5 @@ Sources: [Microsoft Security blog, 17 Nov 2026](https://microsoft.com/en-us/secu
 - 平台把它接在「動手之前」那一關，它才是裝備；單獨當命令用，代理可以不叫它。
 - 綠＝沒有檢查工具反對，不等於「這是好人」。
 - 人被說服去按「好」，它保護不了。就是上面裝置碼那一招。
-- 39 招已知攻擊和狀態寫在 `紅隊工單.md`。五個 AI（Grok、Gemini、ChatGPT、Meta AI、Claude）打了五輪；每一招都先在現在的程式上重現才修，修完都變成固定測試。
+- 同一個引擎也能守伺服器門口、驗收 AI 寫的修補（見 `experiments/`）：3000 招隨機路徑遍歷，沒防護 588 招得手、只靠守衛代理 177、守衛＋插座 0；被下毒的修補（例如「刪掉太吵的測試」）被修補驗收法典擋下。
+- 40 招已知攻擊和狀態寫在 `紅隊工單.md`。五個 AI（Grok、Gemini、ChatGPT、Meta AI、Claude）打了五輪；每一招都先在現在的程式上重現才修，修完都變成固定測試。

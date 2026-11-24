@@ -52,6 +52,8 @@ function 畫駭客(模) {
   const 盒 = 新("div");
   盒.append(新("div", "標題列", 選("① 駭客動了哪裡", "① What the attacker changed")));
   if (!模.改動們.length) 盒.append(新("p", "淡", 選("和正常版本一模一樣，沒有被動過。", "Identical to the normal version. Nothing was changed.")));
+  // 雜湊、簽章這種長指紋只顯示頭尾（一般網站也這樣顯示）；整串放在畫面上，側面掃描會把它當成藏起來的編碼字串
+  const 縮 = (值) => (/^[0-9a-f]{24,}$/i.test(String(值)) ? `${String(值).slice(0, 12)}…${String(值).slice(-4)}` : String(值));
   for (const 改 of 模.改動們) {
     const 卡 = 新("div", "改卡" + (改.狀態 === "缺檔" ? " 缺" : ""));
     卡.append(新("div", "檔", `${字(檔字, 改.檔)} · ${選({ 改了: "被改了", 缺檔: "整個檔不見了", 多出來: "多出來的檔" }[改.狀態], { 改了: "changed", 缺檔: "missing entirely", 多出來: "extra file" }[改.狀態])}`));
@@ -65,7 +67,7 @@ function 畫駭客(模) {
         const 原 = 新("div", "原文");
         const 前 = String(c.前).slice(Math.max(0, c.開頭 - 36), c.開頭);
         原.append(新("span", "前文", (c.開頭 > 36 ? "…" : "") + 前));
-        if (c.刪掉) 原.append(新("del", null, c.刪掉));
+        if (c.刪掉) 原.append(新("del", null, 縮(c.刪掉)));
         const ins = 新("ins");
         for (const ch of c.插入) {
           if (/[​-‏⁠﻿]/.test(ch)) ins.append(新("span", "隱形", 選("隱形字", "INVISIBLE")));
@@ -74,7 +76,7 @@ function 畫駭客(模) {
         原.append(ins); 放.append(原);
         if (c.隱形字數) 放.append(新("div", "路", 選(`↑ 紅框是 ${c.隱形字數} 個人眼看不到的字：駭客用它把壞指令藏在正常句子後面`, `↑ The red marks are ${c.隱形字數} invisible characters the attacker used to hide the injected text`)));
       } else {
-        const 數 = 新("div", "數改"); 數.append(新("del", null, String(c.前)), " → ", 新("b", null, String(c.後))); 放.append(數);
+        const 數 = 新("div", "數改"); 數.append(新("del", null, 縮(c.前)), " → ", 新("b", null, 縮(c.後))); 放.append(數);
       }
     }
     盒.append(卡);

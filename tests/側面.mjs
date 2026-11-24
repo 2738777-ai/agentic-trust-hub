@@ -135,7 +135,7 @@ if (!側面掃描 || !找Chrome()) {
 
   // 拿我們自己的網頁測（2026-11-23）：真實網站到處是藏起來的一般字，不能因此亮燈
   const 自己站 = await 開資料夾(根);
-  for (const 頁 of ["index.html", "side.html", "views.html", "show.html"]) {
+  for (const 頁 of ["index.html", "side.html", "views.html", "show.html", "arena.html"]) {
     const r = await 側面掃描(自己站.網址 + 頁);
     驗(r.決定 === "綠", `自己的網頁 ${頁}：${r.決定}（${r.發現們.length} 筆只記下，不亮燈）`);
   }

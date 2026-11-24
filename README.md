@@ -3,11 +3,11 @@
 **把開放代理網路上各種信任檢查工具的結果，用一張白話法典合成一個決定。**
 *One plain-language law table that combines the verdicts of independent trust checkers for the Open Agentic Web into a single decision.*
 
-**先看直播（30 秒，不用按）**：https://2738777-ai.github.io/agentic-trust-hub/show.html （再按「沒插座」看同一招沒人擋會怎樣）｜**評審三分鐘清單：[JUDGES.md](JUDGES.md)**
+**先看直播（30 秒，不用按）**：https://2738777-ai.github.io/agentic-trust-hub/show.html （再按「沒插座」看同一招沒人擋會怎樣）｜**換你當駭客：[攻防台](https://2738777-ai.github.io/agentic-trust-hub/arena.html)**｜**評審三分鐘清單：[JUDGES.md](JUDGES.md)**
 
 試打台（手機也能開）：https://2738777-ai.github.io/agentic-trust-hub/ ｜ 側面：https://2738777-ai.github.io/agentic-trust-hub/side.html ｜ 視角台：https://2738777-ai.github.io/agentic-trust-hub/views.html
 
-**Start here (30-second live demo, no clicks needed):** https://2738777-ai.github.io/agentic-trust-hub/show.html?lang=en — an AI agent books a guesthouse, an attacker tampers with the site, and the hub catches it on the spot. Then tap **Without the hub** to watch the same attack succeed with nobody in the way. **Judges' 3-minute checklist (three commands, real outputs, real 2026 incidents): [JUDGES.md](JUDGES.md).** Try it yourself: https://2738777-ai.github.io/agentic-trust-hub/?lang=en
+**Start here (30-second live demo, no clicks needed):** https://2738777-ai.github.io/agentic-trust-hub/show.html?lang=en — an AI agent books a guesthouse, an attacker tampers with the site, and the hub catches it on the spot. Then tap **Without the hub** to watch the same attack succeed with nobody in the way. **Then be the attacker: [arena.html](https://2738777-ai.github.io/agentic-trust-hub/arena.html?lang=en)** (type a sentence; watch the hub revoke the stolen key and patch itself live). **Judges' 3-minute checklist (three commands, real outputs, real 2026 incidents): [JUDGES.md](JUDGES.md).** Try it yourself: https://2738777-ai.github.io/agentic-trust-hub/?lang=en
 
 ---
 
