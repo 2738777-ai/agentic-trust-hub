@@ -21,7 +21,8 @@
     }
   ],
   "llm_router": {
-    "base_url": "https://api.otari.ai/api/v1",
+    "base_url": "https://trust-hub-llm.2738777.workers.dev/v1",
+    "publisher_funded": true,
     "mock": false,
     "byok_router": "https://api.otari.ai/api/v1"
   },
