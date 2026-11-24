@@ -6,8 +6,10 @@
 //  1. 只收 POST /v1/chat/completions（OpenAI 格式、串流）；GET /v1/models 只列允許的模型。其他一律 404。
 //  2. 瀏覽器送來的 Authorization 一律丟掉；只用伺服器祕密 OTARI_KEY。訪客自己的金鑰永遠不會送到這裡（runtime 會改走 byok_router）。
 //  3. 只准清單上的網站（ALLOWED_ORIGINS）；只准網路檔寫的模型；請求本體有上限；max_tokens 由這裡定，不信瀏覽器。
-//  4. 只替「萬用插座自己的代理網路」付錢：系統提示必須是 trust_hub 的兩個代理之一，工具只能是 trust_hub 的工具，
-//     對話則數有上限。拿這裡當免費通用 AI 的請求一律 403。
+//  4. 只替「萬用插座自己的兩個代理」付錢，而且提示由伺服器組：
+//     瀏覽器送來的系統提示必須和 worke./fixed-prompts.js 一字不差（那份由官方執行程式自己組出來），否則 403；
+//     轉給上游的系統提示和工具定義一律用伺服器那一份；對話只收必要欄位（使用者的話、助手的回覆和工具呼叫、工具結果），
+//     工具呼叫的名字只能是那個代理自己的工具，多的欄位丟掉，長度和則數都有上限。
 //  5. 額度用 Durable Object 原子計數（同一個物件裡讀和寫中間沒有空檔，多人同時聊天也不會多放）：
 //     每個 IP 每天幾次、全站每天幾次。用完回 429、純文字、中英兩句，聊天視窗會原樣顯示。
 //  6. 沒有 OTARI_KEY、或沒綁計數器 LIMITS → 拒絕服務（出事就關門，不會變成「沒有上限」）。
@@ -15,7 +17,10 @@
 //  8. 真正的花費上限放在 Otari 帳戶本身（帳戶餘額＝硬上限）。這裡的次數限制是第二道。
 //
 // 老實話：靜態網頁藏不住任何祕密，所以「瀏覽器拿得到的通行證，腳本也拿得到」。
-// 這裡不假裝能分辨人和腳本；擋濫用靠第 4 條（只付本站代理的錢）＋第 5 條（原子額度）＋第 8 條（帳戶餘額）。
+// 這裡不假裝能分辨人和腳本；擋濫用靠第 4 條（提示和工具由伺服器定，只付本站代理的錢）＋第 5 條（原子額度）＋第 8 條（帳戶餘額）。
+// 剩下的風險說清楚：有人照抄本站提示、只換使用者的話，還是能讓「萬用插座助手」回答他；那就由額度和餘額封頂。
+
+import { 固定代理們 } from "./fixed-prompts.js";
 
 export const 規矩 = {
   模型們: ["alibaba/qwen3.8-flash"],
@@ -25,12 +30,9 @@ export const 規矩 = {
   每IP每天: 40,
   全站每天: 1500,
   上游: "https://api.otari.ai/api/v1",
-  // trust_hub.network.json 裡兩個代理的指令開頭（測試會對照網路檔，改網路檔沒改這裡就會失敗）
-  系統提示們: [
-    "You are the assistant on the Agentic Trust Hub website.",
-    "You help the Agentic Trust Hub assistant audit proposed changes to the hub's law.",
-  ],
-  工具們: ["website_get_hub_overview", "website_check_demo_site", "website_compare_law_change", "law_auditor", "render_cruse"],
+  每則上限: 8000,           // 使用者的話、助手回覆（字元）
+  工具結果上限: 70000,       // 工具結果（字元）
+  參數上限: 4000,            // 工具呼叫的參數（字元）
 };
 
 const 用完了 = "Today's free allowance on this site is used up. To keep going, add your own key in ⚙ AI model settings. 今天的免費額度用完了，要繼續請在「AI model settings」填你自己的金鑰。";
@@ -52,17 +54,41 @@ function CORS(來源, env) {
 }
 const 文字回應 = (狀態, 字, 標頭) => new Response(字, { status: 狀態, headers: { ...標頭, "Content-Type": "text/plain; charset=utf-8" } });
 
-// 規矩 4：是不是萬用插座自己的代理在問
-export function 是本站代理(本體) {
-  const 訊息 = 本體.messages;
-  if (!Array.isArray(訊息) || 訊息.length === 0 || 訊息.length > 規矩.最多訊息) return false;
-  const 系統 = 訊息[0];
-  if (系統?.role !== "system" || typeof 系統.content !== "string") return false;
-  if (!規矩.系統提示們.some((p) => 系統.content.includes(p))) return false;
-  if (訊息.slice(1).some((m) => m?.role === "system")) return false;           // 不准在中間塞第二個系統提示
-  const 工具 = 本體.tools ?? [];
-  if (!Array.isArray(工具)) return false;
-  return 工具.every((t) => t?.type === "function" && 規矩.工具們.includes(t.function?.name));
+// 規矩 4：找出是哪一個本站代理（系統提示一字不差），找不到回 null
+export function 找本站代理(本體) {
+  const 系統 = 本體?.messages?.[0];
+  if (系統?.role !== "system" || typeof 系統.content !== "string") return null;
+  return 固定代理們.find((a) => a.系統提示 === 系統.content) ?? null;
+}
+
+// 規矩 4：對話只收必要欄位。不合格回 null（整個請求 403）
+export function 清洗對話(代理, 訊息們) {
+  if (!Array.isArray(訊息們) || 訊息們.length < 2 || 訊息們.length > 規矩.最多訊息) return null;
+  const 工具名 = new Set(代理.工具們.map((t) => t.function.name));
+  const 字 = (x, 上限) => typeof x === "string" && x.length <= 上限;
+  const 乾淨 = [{ role: "system", content: 代理.系統提示 }];
+  for (const m of 訊息們.slice(1)) {
+    if (m?.role === "user") {
+      if (!字(m.content, 規矩.每則上限)) return null;
+      乾淨.push({ role: "user", content: m.content });
+    } else if (m?.role === "assistant") {
+      if (!(m.content == null || 字(m.content, 規矩.每則上限))) return null;
+      const 出 = { role: "assistant", content: m.content ?? null };
+      if (m.tool_calls != null) {
+        if (!Array.isArray(m.tool_calls) || m.tool_calls.length > 8) return null;
+        出.tool_calls = [];
+        for (const c of m.tool_calls) {
+          if (!字(c?.id, 200) || !工具名.has(c?.function?.name) || !字(c.function.arguments ?? "", 規矩.參數上限)) return null;
+          出.tool_calls.push({ id: c.id, type: "function", function: { name: c.function.name, arguments: c.function.arguments ?? "" } });
+        }
+      }
+      乾淨.push(出);
+    } else if (m?.role === "tool") {
+      if (!字(m.tool_call_id, 200) || !工具名.has(m.name) || !字(m.content, 規矩.工具結果上限)) return null;
+      乾淨.push({ role: "tool", tool_call_id: m.tool_call_id, name: m.name, content: m.content });
+    } else return null;                    // 系統提示只能有開頭那一個；其他角色一律不收
+  }
+  return 乾淨;
 }
 
 // ---------- 規矩 5：原子計數（純邏輯；Durable Object 和測試共用） ----------
@@ -116,7 +142,9 @@ export default {
     try { 本體 = JSON.parse(原文); } catch { return 文字回應(400, "Bad request.", 標頭); }
     if (!本體 || typeof 本體 !== "object" || !Array.isArray(本體.messages)) return 文字回應(400, "Bad request.", 標頭);
     if (!規矩.模型們.includes(本體.model)) return 文字回應(400, `The free model on this site is ${規矩.模型們.join(", ")}. For other models, add your own key in ⚙ AI model settings.`, 標頭);
-    if (!是本站代理(本體)) return 文字回應(403, 不是本站, 標頭);
+    const 代理 = 找本站代理(本體);
+    const 對話 = 代理 && 清洗對話(代理, 本體.messages);
+    if (!對話) return 文字回應(403, 不是本站, 標頭);
 
     // 原子計數：交給唯一的 Durable Object；它出錯就關門
     let 超過;
@@ -140,8 +168,8 @@ export default {
     if (超過 === "每IP") return 文字回應(429, 太多了, 標頭);
 
     // 只轉送允許的欄位；max_tokens 和 stream 由這裡定
-    const 轉送 = { model: 本體.model, messages: 本體.messages, stream: true, max_tokens: 規矩.max_tokens };
-    if (Array.isArray(本體.tools) && 本體.tools.length) { 轉送.tools = 本體.tools; 轉送.tool_choice = "auto"; }
+    // 系統提示、工具定義用伺服器那一份；瀏覽器送來的 tools 不看
+    const 轉送 = { model: 本體.model, messages: 對話, stream: true, max_tokens: 規矩.max_tokens, tools: 代理.工具們, tool_choice: "auto" };
 
     let 上游回應;
     try {
