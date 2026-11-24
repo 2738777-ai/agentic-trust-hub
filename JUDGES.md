@@ -17,6 +17,7 @@
 
 ### Use it on your own agent today
 The same engine runs as a **Claude Code `PreToolUse` hook** ([`hook/`](hook/README.md)): before the agent connects anywhere or sends anything out, it checks who asked for that URL (the user, or only text the agent read), where it goes, and whether a secret rides along. Text-planted URL → it asks you; a secret going out → denied. 13 tests; not yet run end-to-end in a live Claude Code session.
+It is also an **MCP server** ([`mcp/`](mcp/README.md)) so any MCP agent can call it: `judge_action`, `check_agent_site`, `compare_laws`, `scan_page`, `read_law`. A real Claude Code shows it as **Connected** (`claude mcp add trust-hub -- node mcp/伺服器.mjs`).
 
 ### 3 minutes, in a terminal
 
@@ -89,6 +90,7 @@ Sources: [Microsoft Security blog, 17 Nov 2026](https://microsoft.com/en-us/secu
 
 ### 今天就能裝在你的代理上
 同一個引擎做成 **Claude Code 的動手前掛勾**（[`hook/`](hook/README.md)）：代理要連網、要送東西出去之前，先看這個網址是你要的、還是它從網頁讀來的，送去哪，有沒有帶祕密。網頁裡藏的網址 → 問你；帶祕密出門 → 不准。13 項測試；還沒在真的 Claude Code 對話裡跑過完整一輪。
+也做成了 **MCP 接口**（[`mcp/`](mcp/README.md)），任何支援 MCP 的代理都能接：判斷動手前、檢查代理網站、比法典鬆緊、側面掃描、看法典。真的 Claude Code 顯示**已連線**。
 
 ### 電腦 3 分鐘
 
