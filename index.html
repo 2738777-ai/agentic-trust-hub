@@ -7,6 +7,8 @@
 <meta name="description" content="Agentic Trust Hub: plug independent trust checkers for the open agentic web into one plain-language law. 把別人做的代理網站檢查工具接在一起，由一張白話法典決定放不放行。">
 <link rel="stylesheet" href="web/樣式.css">
 <link rel="modulepreload" href="web/核心包.js">
+<link rel="stylesheet" href="web/assistant.css">
+<script type="module" src="site.js"></script>
 </head>
 <body>
 <main class="頁">
@@ -52,6 +54,21 @@
       <button id="還原" type="button" data-字="還原">還原</button>
     </div>
     <p id="法狀態" class="法狀態" role="status"></p>
+  </section>
+
+  <section id="assistant" class="assistant" aria-labelledby="assistant-heading">
+    <h2 id="assistant-heading" data-字="助標題">④ 問插座的助手（代理網站）</h2>
+    <p data-字="助說明">這一頁本身也是開放代理網站：助手在你的瀏覽器裡跑，用的就是上面同一份引擎和法典。可以請它檢查示範網站、解釋法典，或審查別人想改的規則安不安全。</p>
+    <p class="assistant-note" data-字="助注意">你打的字和這一頁的資料會送到你在下方設定選的 AI 服務。助手只能判斷，不能改任何東西。</p>
+    <p id="assistant-status" role="status">Connecting the assistant… 助手連線中…</p>
+    <div id="agent-app">
+      <div data-ns-slot="header"></div>
+      <div class="assistant-panels">
+        <div data-ns-slot="chat"></div>
+        <div data-ns-slot="agents"></div>
+      </div>
+      <div data-ns-slot="settings"></div>
+    </div>
   </section>
 
   <section aria-labelledby="是標題" class="說明">

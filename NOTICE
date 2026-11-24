@@ -20,3 +20,7 @@ Copyright 2026 2738777-ai
 5. 普通網頁示範 — examples/web_clean、web_clean_hero、web_hacked、web_hacked_css、web_hacked_geo、web_hacked_frame、web_hacked_meta；examples/web_hacked_self 是本專案自己的正面頁面加上一句假的藏起來的指令
    取自開放代理網路官方範例 guesthouse（沒有代理的普通民宿網頁），Apache License 2.0。
    web_clean_hero 加了一段照片上的白字和讀屏軟體用的短句（測誤擋）；web_hacked*/index.html 被我們故意塞了假的藏字手腳（壞網址都用 .invalid），只用來測側面掃描，不是原作者的內容。
+
+6. 開放代理網路瀏覽器執行程式 — runtime/（原封不動，不准手改）
+   來源：https://github.com/cognizant-ai-labs/agentic-web skills/agentify-website/runtime/ （commit d67755e762545de983e38a395ec45d89b77c9311）
+   Apache License 2.0（runtime/LICENSE.txt）。web/assistant.css、site.js、tests/agent/stub_*.mjs、tests/agent/scripted_model.mjs、tools/serve_site.mjs 取自同一處的範本，有改寫。
