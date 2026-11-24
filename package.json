@@ -8,7 +8,8 @@
     "test": "node tests/全部.mjs",
     "law": "node cli/插座.mjs 法典",
     "examples": "node tools/做示範版本.mjs",
-    "build": "node tools/打包.mjs"
+    "build": "node tools/打包.mjs",
+    "rehearse": "node --no-warnings tools/沙盤推演.mjs"
   },
   "engines": {
     "node": ">=20"
