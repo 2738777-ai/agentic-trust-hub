@@ -6,6 +6,24 @@
 
 ## English
 
+### Stage One: the seven interoperability tests (Profile 0.2 §6)
+
+The hub's own page is a conforming open agentic website. Open https://2738777-ai.github.io/agentic-trust-hub/?lang=en and scroll to **④ Ask the hub's assistant**. No key is needed: the site pays for the model (capped per visitor and per day).
+
+| Test | See it yourself | Proof in the repo |
+|---|---|---|
+| **T1** Two-agent network + manifest over HTTPS | [`agent-manifest.json`](https://2738777-ai.github.io/agentic-trust-hub/agent-manifest.json), network URL `…/agentic-trust-hub/trust_hub` (front agent + internal `law_auditor`) | `tests/agent/trust_hub.test.mjs` |
+| **T2** Default router in the browser; BYOK shown | Ask *"Check the demo site where the attacker re-signed the agent file."* The badge reads **real LLM**. Your own key goes in **⚙ AI model settings**. | `worker/worker.js` (publisher-funded router: fixed prompts, atomic per-IP/day caps), `tests/代付.mjs` |
+| **T3** Internal agent + grounded capability | Ask *"Someone wants to change 'Agent Customs says DENIED → DENY' to REVIEW. Is that safe?"* The front agent hands it to `law_auditor`, which runs the site action `compare_law_change`. | `tests/agent/trust_hub.test.mjs` |
+| **T4** Load an exact named network from a second origin, after approval | Ask *"Ask the harbor notice board: when does the last ferry leave on Monday?"* → **Allow**. The hub checks the partner on `trust-hub-llm.2738777.workers.dev`, says **GREEN**, and it runs in your browser. Then ask *"Ask the harbor mirror the same question."* → **Allow**: the hub says **DENY** (law line 13) and none of its agents run. | `trust-gate.js`, `tests/agent/trust_gate.test.mjs`, proof of the design: `experiments/跨站同意/` (240 paths, 0 violations) |
+| **T5** Your key never reaches the second site; it cannot change your router | Set your key, ask the notice board again, and watch the network panel: requests to the partner carry no key. | `tests/agent/private_context.test.mjs` records every request the partner receives |
+| **T6** Private context absent at the peer unless a named field is allowed | After the notice board answers, the status line reads *"Private context sent: visitor_language; everything else stays here."* | Two layers: the agent's `allow.to_downstream` and the hub's per-destination list (`trust-gate.js`, rule 9). Same test file. |
+| **T7** Invalid network, cycle, over-budget, denied origin: stopped and visible | The mirror above shows a visible block. Over budget: the runtime refuses a second call to the same partner in one query ("already consulted"); the free model refuses with a visible message when the day's allowance is used up. | `tests/agent/trust_gate.test.mjs` (cycle, denied origin, unreadable), `tests/agent/private_context.test.mjs` (over budget), `tests/agent/trust_hub.test.mjs` (invalid network) |
+
+**Rehearse everything without spending a model call:** `node tools/沙盤推演.mjs` runs a real Chrome at phone size against the real page, runtime and router code, with only the model scripted (8 scenes).
+
+**Findings in the official runtime that the hub closes** (`trust-gate.js`): after *Always allow* the consent card, and any check placed inside it, never runs again for that origin; a consent answer other than allow/always/decline counts as *allow*; a peer checked by one fetch and run from a second fetch can be swapped in between; duplicate agent names pass validation; private-context permissions are not destination-scoped.
+
 ### 30 seconds, on a phone
 
 1. **With the hub:** https://2738777-ai.github.io/agentic-trust-hub/show.html?lang=en
