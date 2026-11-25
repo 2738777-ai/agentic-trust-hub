@@ -46,17 +46,14 @@ export class AssistantMount {
       booted.engine.onActionConfirm = AssistantMount.review;
       AssistantMount.defaultConsent = booted.engine.onConsent;
       booted.engine.onConsent = AssistantMount.consent;
-      // 萬用插座跨站閘門（T4）：別站的代理要進來，先過插座。裝不上就不准叫別站（出錯就關門）。
+      // 萬用插座跨站閘門（T4～T6）：用的就是給別人的那一行（gate/trust-hub-gate.js），自己先吃自己的狗糧。
+      // 裝不上就不准叫別站（出錯就關門，閘門自己會把 resolveRemote 換成一律拒絕）。
       try {
-        const 閘門 = await import("./trust-gate.js");
-        AssistantMount.cardAnswer = 閘門.卡片答案;
-        const 法典網址 = new URL("core/法典.en.txt", siteBase).href;
-        閘門.安裝閘門(booted.engine, {
-          讀法典: async () => (await fetch(法典網址, { cache: "no-store" })).text(),
-          pageOrigin: location.origin,
-          回報: AssistantMount.gateReport,
+        const 閘門 = await import("./gate/trust-hub-gate.js");
+        閘門.install(booted.engine, {
           // T6：私有資料按目的地點名。只有港口公告欄可以收到訪客的語言；鏡像什麼都拿不到（它也會被擋下）。
-          私有資料白名單: { "https://trust-hub-llm.2738777.workers.dev/harbor_notice_board/harbor_notice_board": ["visitor_language"] },
+          privateContext: { "https://trust-hub-llm.2738777.workers.dev/harbor_notice_board/harbor_notice_board": ["visitor_language"] },
+          onReport: AssistantMount.gateReport,
         });
         // T6 示範用的私有資料：訪客瀏覽器的語言（官方介面本來就帶 backend_token 這個不准外送的示範欄位）
         const 原stream = booted.engine.streamTurn.bind(booted.engine);
@@ -165,23 +162,21 @@ export class AssistantMount {
   /**
    * 萬用插座閘門每判一次，就在狀態列寫一行，讓訪客看得到（T7：擋下要看得到）。
    */
-  static gateReport(r) {
+  static gateReport(x) {
     const status = document.querySelector("#assistant-status");
     if (!status) return;
-    const host = (() => { try { return new URL(r.查?.來源 ?? r.來源).host; } catch { return "partner"; } })();
-    const 名 = r.查?.網路名 ?? r.網路名;
-    const 格 = { 綠: "GREEN", 黃: "YELLOW", 待審: "REVIEW", 拒: "DENY" }[r.查?.決定] ?? "DENY";
-    const 私 = r.私有資料
-      ? ` 私有資料：只送出 ${r.私有資料.送出.join("、") || "（無）"}，其他一律留在這裡。Private context sent: ${r.私有資料.送出.join(", ") || "none"}; everything else stays here.`
+    const 私 = x.privateContextSent
+      ? ` 私有資料：只送出 ${x.privateContextSent.join("、") || "（無）"}，其他一律留在這裡。Private context sent: ${x.privateContextSent.join(", ") || "none"}; everything else stays here.`
       : "";
-    status.textContent = !r.擋下
-      ? `萬用插座：夥伴 ${名}（${host}）判 ${格}，放行。Trust hub: partner ${名} at ${host} is ${格}; allowed to run.${私}`
-      : r.原因 === "掉包"
-        ? `萬用插座：夥伴 ${名}（${host}）檢查的和要跑的不一樣（掉包），擋下。Trust hub blocked ${名}: bait-and-switch.`
-        : r.原因 === "讀不到"
-          ? `萬用插座：讀不到夥伴 ${名}（${host}），擋下。Trust hub could not check ${名}, so it was blocked.`
-          : `萬用插座：夥伴 ${名}（${host}）判 ${格}，擋下，它的代理一個都沒跑。Trust hub blocked ${名} (${格}); none of its agents ran.`;
+    status.textContent = x.allowed
+      ? `萬用插座：夥伴 ${x.partner}（${x.host}）判 ${x.decision}，放行。Trust hub: partner ${x.partner} at ${x.host} is ${x.decision}; allowed to run.${私}`
+      : x.reason === "bait-and-switch"
+        ? `萬用插座：夥伴 ${x.partner}（${x.host}）檢查的和要跑的不一樣（掉包），擋下。Trust hub blocked ${x.partner}: bait-and-switch.`
+        : x.reason === "unreadable"
+          ? `萬用插座：讀不到夥伴 ${x.partner}（${x.host}），擋下。Trust hub could not check ${x.partner}, so it was blocked.`
+          : `萬用插座：夥伴 ${x.partner}（${x.host}）判 ${x.decision}，擋下，它的代理一個都沒跑。Trust hub blocked ${x.partner} (${x.decision}); none of its agents ran.`;
   }
+
 
   /**
    * Name the newest consent card after its title, for screen readers. Move focus to that

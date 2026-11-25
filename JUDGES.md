@@ -22,6 +22,10 @@ The hub's own page is a conforming open agentic website. Open https://2738777-ai
 
 **Rehearse everything without spending a model call:** `node tools/沙盤推演.mjs` runs a real Chrome at phone size against the real page, runtime and router code, with only the model scripted (8 scenes).
 
+**Use the gate on your own agentic site (one line).** After your page boots the official runtime, add:
+`(await import("https://2738777-ai.github.io/agentic-trust-hub/gate/trust-hub-gate.js")).install(booted.engine);`
+Every partner site your agents call is then checked by the same law before it runs, and blocked partners never run. Optional: your own law, a per-destination private-context list, and a report callback. Details and the rules table: [`gate/README.md`](gate/README.md). This hub's own page uses exactly that file (`site.js`), and `tests/agent/gate_bundle.test.mjs` tests the built file against the real runtime.
+
 **Findings in the official runtime.** While building the gate we found gaps in the reference browser runtime and reported them to the maintainers privately ([cognizant-ai-labs/agentic-web#87](https://github.com/cognizant-ai-labs/agentic-web/issues/87)). The hub's gate (`trust-gate.js`) does not depend on a fix: it checks the exact partner files before they run, fails closed, and scopes private context per destination.
 
 ### 30 seconds, on a phone
