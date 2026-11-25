@@ -22,7 +22,7 @@ The hub's own page is a conforming open agentic website. Open https://2738777-ai
 
 **Rehearse everything without spending a model call:** `node tools/沙盤推演.mjs` runs a real Chrome at phone size against the real page, runtime and router code, with only the model scripted (8 scenes).
 
-**Findings in the official runtime that the hub closes** (`trust-gate.js`): after *Always allow* the consent card, and any check placed inside it, never runs again for that origin; a consent answer other than allow/always/decline counts as *allow*; a peer checked by one fetch and run from a second fetch can be swapped in between; duplicate agent names pass validation; private-context permissions are not destination-scoped.
+**Findings in the official runtime.** While building the gate we found gaps in the reference browser runtime and reported them to the maintainers privately ([cognizant-ai-labs/agentic-web#87](https://github.com/cognizant-ai-labs/agentic-web/issues/87)). The hub's gate (`trust-gate.js`) does not depend on a fix: it checks the exact partner files before they run, fails closed, and scopes private context per destination.
 
 ### 30 seconds, on a phone
 
