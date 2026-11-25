@@ -12,6 +12,7 @@ const 劇本們 = [
   { 幕: "5 T4＋T6 問別站（港口公告欄）：同意卡片 → 插座判綠 → 夥伴在本機跑；私有資料只送語言", 問: "Ask the harbor notice board: when does the last ferry leave on Monday?", 卡片: "allow", 要看到: /Harbor Notice Board says: .*12:00/s, 狀態要看到: /放行.*只送出 visitor_language，其他一律留在這裡/s, 截圖: "5_別站放行.png" },
   { 幕: "6 T4 問鏡像（被下毒的夥伴）：同意卡片 → 插座判拒 → 夥伴一個代理都沒跑", 問: "Ask the harbor mirror the same question.", 卡片: "allow", 要看到: /blocked partner network 'harbor_mirror'.*DENY/s, 狀態要看到: /擋下/, 夥伴不准跑: true, 截圖: "6_鏡像擋下.png" },
   { 幕: "7 卡片按拒絕：插座連檢查都不用，別站一個檔案都沒被抓", 問: "Ask the harbor notice board about the fish market.", 卡片: "decline", 要看到: /declined/i, 別站不准被聯絡: true },
+  { 幕: "8 T7 超過預算：同一題叫同一個別站兩次（永遠允許）→ 第二次在聯絡前就停，聊天看得到原因", 問: "Ask the harbor notice board twice about the ferry.", 卡片: "always", 要看到: /Skipped Harbor Notice Board: that network was already consulted for this query/, 夥伴只准跑: 1, 截圖: "8_超過預算.png" },
   { 幕: "4 全站額度用完，聊天視窗照原樣顯示", 問: "Check the normal demo site.", 額度用完: true, 要看到: /free allowance/, 截圖: "4_額度用完.png" },
 ];
 const 夥伴網域 = "https://trust-hub-llm.2738777.workers.dev";
@@ -48,6 +49,7 @@ const 劇本模型 = (訊息們) => {
   }
   if (末.role === "user") {
     if (/harbor mirror/i.test(末.content)) return { tool: "harbor_mirror_harbor_mirror", args: { request: "When does the last ferry leave on Monday?" } };
+    if (/twice/i.test(末.content)) return { tool: "harbor_notice_board_harbor_notice_board", args: { request: "Ferry times?" } };
     if (/harbor notice board/i.test(末.content)) return { tool: "harbor_notice_board_harbor_notice_board", args: { request: /fish/i.test(末.content) ? "Fish market hours?" : "When does the last ferry leave on Monday?" } };
     if (/audit proposed changes/.test(系統)) return { tool: "website_compare_law_change", args: { find: "Agent Customs says DENIED → DENY", replace: "Agent Customs says DENIED → REVIEW" } };
     if (/safe/i.test(末.content)) return { tool: "law_auditor", args: { request: "Change 'Agent Customs says DENIED → DENY' to REVIEW. Safe?" } };
@@ -56,9 +58,13 @@ const 劇本模型 = (訊息們) => {
   let r = {}; try { r = JSON.parse(末.content); } catch { r = { text: 末.content }; }
   const x = r.result ?? r;
   if (x.decision) return { text: `**Decision: ${x.decision}.**\n\n| Checker | Code | Level | Law line |\n|---|---|---|---|\n` + x.reasons.map((y) => `| ${y.checker} | ${y.code} | ${y.level} | ${y.law_line} |`).join("\n") };
+  // 第 8 幕：第一次問完別站，立刻再問一次（看預算擋不擋）
+  if (末.role === "tool" && 訊息們.some((m) => m.role === "user" && /twice/i.test(m.content)) && 訊息們.filter((m) => m.role === "tool").length === 1) {
+    return { tool: "harbor_notice_board_harbor_notice_board", args: { request: "Ferry times again?" } };
+  }
   if (末.name?.startsWith("harbor_") || /harbor_(notice_board|mirror)/.test(末.tool_call_id ?? "") || /Harbor|harbor|declined|blocked/i.test(String(末.content))) {
     const 字 = String(r.result ?? r.text ?? 末.content);
-    return { text: /blocked|declined|Error/i.test(字) ? `Result: ${字.slice(0, 400)}` : `Harbor Notice Board says: ${字.slice(0, 300)}` };
+    return { text: /blocked|declined|Error|Skipped/i.test(字) ? `Result: ${字.slice(0, 400)}` : `Harbor Notice Board says: ${字.slice(0, 300)}` };
   }
   if (x.loosened != null) return { text: `Loosened cells: ${x.loosened}. Human approval needed: ${x.needs_human_approval}. Applied: ${x.applied}.` };
   return { text: `Auditor says: ${String(r.text ?? 末.content).slice(0, 300)}` };
@@ -143,7 +149,8 @@ for (const 劇 of 劇本們) {
     通過 = 劇.要看到.test(全文)
       && (!劇.狀態要看到 || 劇.狀態要看到.test(狀態))
       && (!劇.夥伴不准跑 || 夥伴跑了 === 0)
-      && (!劇.別站不准被聯絡 || 別站請求.length === 別站前);
+      && (!劇.別站不准被聯絡 || 別站請求.length === 別站前)
+      && (劇.夥伴只准跑 == null || 夥伴跑了 === 劇.夥伴只准跑);
     if (劇.狀態要看到) 說明 = `狀態列：${狀態.trim().slice(0, 80)}；`;
     說明 = (說明 ?? "") + 全文.trim().split("\n").filter(Boolean).slice(-2).join(" / ").slice(0, 160);
     if (劇.截圖) await 頁.locator("#ns-msgs").screenshot({ path: path.join(出圖, 劇.截圖) });

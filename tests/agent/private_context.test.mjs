@@ -64,13 +64,13 @@ before(async () => {
 after(() => { 夥伴站?.close(); 路由?.close(); globalThis.fetch = 原fetch; });
 
 /** 我方站＋訪客自己的金鑰（BYOK），跑一輪：叫公告欄 */
-async function 跑一輪({ 白名單 = { [公告欄]: ["visitor_language"] }, 不裝閘門 = false } = {}) {
+async function 跑一輪({ 白名單 = { [公告欄]: ["visitor_language"] }, 不裝閘門 = false, 腳本 } = {}) {
   const 我們 = "http://localhost:9";
   const 網路檔 = JSON.parse(await readFile(path.join(根, "trust_hub.network.json"), "utf8"));
   const 清單 = JSON.parse(await readFile(path.join(根, "agent-manifest.json"), "utf8"));
   const e = new Engine({ originUrl: 我們, byokKey: 訪客金鑰 });
   const network = new AgentNetwork(網路檔, "trust_hub");
-  const 模型 = new ScriptedModel([{ tool: "harbor_notice_board_harbor_notice_board", arguments: { request: "When does the last ferry leave on Monday?" } }, { text: "done" }]);
+  const 模型 = new ScriptedModel(腳本 ?? [{ tool: "harbor_notice_board_harbor_notice_board", arguments: { request: "When does the last ferry leave on Monday?" } }, { text: "done" }]);
   e.top = { network, base: 我們, manifest: 清單, llm: 模型 };
   e.userRouter = { baseUrl: 路由網址, mock: false, publisherFunded: false };   // 訪客自己的金鑰走自己的路由
   e.actions = new ActionRegistry();
@@ -150,4 +150,13 @@ test("代付服務會接受別站代理真的送出的系統提示（和固定�
   await 跑一輪();
   const 夥伴 = 路由收到.find((x) => /Harbor Notice Board, a small demo partner/.test(x.系統));
   assert.equal(夥伴.系統, 固定代理們[2].系統提示);
+});
+
+test("T7 超過預算：同一題叫同一個別站第二次，在聯絡別站前就停，模型看到原因", async () => {
+  const 叫 = { tool: "harbor_notice_board_harbor_notice_board", arguments: { request: "Ferry times?" } };
+  const { 模型 } = await 跑一輪({ 腳本: [叫, 叫, { text: "done" }] });
+  const 訊息 = 模型.calls[2].messages;
+  assert.match(String(訊息[訊息.length - 1].content), /^Skipped Harbor Notice Board: that network was already consulted for this query/);
+  const 夥伴模型呼叫 = 路由收到.filter((x) => /Harbor Notice Board, a small demo partner/.test(x.系統));
+  assert.equal(夥伴模型呼叫.length, 1, "別站只准跑一次");
 });
