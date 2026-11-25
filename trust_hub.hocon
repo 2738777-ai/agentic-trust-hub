@@ -105,6 +105,13 @@ How to work:
 {partner_rules}
 {cruse_rules}
 """,
+            # T6: the only private-context field any partner may receive. The hub then names
+            # which partner gets it (trust-gate.js, rule 9); everything else stays here.
+            "allow": {
+                "to_downstream": {
+                    "sly_data": ["visitor_language"]
+                }
+            },
             "tools": ["law_auditor", "https://trust-hub-llm.2738777.workers.dev/harbor_notice_board/harbor_notice_board", "https://trust-hub-llm.2738777.workers.dev/harbor_mirror/harbor_mirror"]
         },
         {

@@ -9,7 +9,7 @@ const 劇本們 = [
   { 幕: "1 評審第一次來，沒有金鑰", 問: "Check the demo site where the attacker re-signed the agent file.", 要看到: /DENY/, 截圖: "1_檢查C.png" },
   { 幕: "2 審查改法典（交給內部代理）", 問: "Is changing DENIED to REVIEW safe?", 要看到: /Loosened cells: 3.*Human approval needed: true/s, 截圖: "2_審查改法典.png" },
   { 幕: "3 站外濫用直接打代付服務（提示加料）", 直打: true },
-  { 幕: "5 T4 問別站（港口公告欄）：同意卡片 → 插座判綠 → 夥伴在本機跑", 問: "Ask the harbor notice board: when does the last ferry leave on Monday?", 卡片: "allow", 要看到: /Harbor Notice Board says: .*12:00/s, 狀態要看到: /放行/, 截圖: "5_別站放行.png" },
+  { 幕: "5 T4＋T6 問別站（港口公告欄）：同意卡片 → 插座判綠 → 夥伴在本機跑；私有資料只送語言", 問: "Ask the harbor notice board: when does the last ferry leave on Monday?", 卡片: "allow", 要看到: /Harbor Notice Board says: .*12:00/s, 狀態要看到: /放行.*只送出 visitor_language，其他一律留在這裡/s, 截圖: "5_別站放行.png" },
   { 幕: "6 T4 問鏡像（被下毒的夥伴）：同意卡片 → 插座判拒 → 夥伴一個代理都沒跑", 問: "Ask the harbor mirror the same question.", 卡片: "allow", 要看到: /blocked partner network 'harbor_mirror'.*DENY/s, 狀態要看到: /擋下/, 夥伴不准跑: true, 截圖: "6_鏡像擋下.png" },
   { 幕: "7 卡片按拒絕：插座連檢查都不用，別站一個檔案都沒被抓", 問: "Ask the harbor notice board about the fish market.", 卡片: "decline", 要看到: /declined/i, 別站不准被聯絡: true },
   { 幕: "4 全站額度用完，聊天視窗照原樣顯示", 問: "Check the normal demo site.", 額度用完: true, 要看到: /free allowance/, 截圖: "4_額度用完.png" },
