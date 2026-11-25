@@ -51,7 +51,7 @@ for (const [檔, 名] of [["鬆緊.mjs", "鬆緊測試"], ["側面.mjs", "側面
   catch (e) { 驗(false, `${名}有失敗：\n` + e.stdout); }
 }
 // 4e 代理網站（官方執行程式＋網站動作＋腳本模型）、4f 模型代付服務
-try { execFileSync(process.execPath, ["--test", path.join(根, "tests", "agent", "trust_hub.test.mjs")], { encoding: "utf8", stdio: "pipe" }); 驗(true, "代理網站測試全部通過（node --test tests/agent/）"); }
+try { execFileSync(process.execPath, ["--test", path.join(根, "tests", "agent", "trust_hub.test.mjs"), path.join(根, "tests", "agent", "trust_gate.test.mjs")], { encoding: "utf8", stdio: "pipe" }); 驗(true, "代理網站＋跨站閘門測試全部通過（node --test tests/agent/）"); }
 catch (e) { 驗(false, "代理網站測試有失敗：\n" + e.stdout); }
 try { const o = execFileSync(process.execPath, [path.join(根, "tests", "代付.mjs")], { encoding: "utf8" }); 驗(true, `代付服務測試全部通過（${o.trim().split("\n").pop()}）`); }
 catch (e) { 驗(false, "代付服務測試有失敗：\n" + e.stdout); }

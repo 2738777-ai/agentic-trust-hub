@@ -1,0 +1,28 @@
+{
+  "llm_config": {
+    "model_name": "alibaba/qwen3.8-flash"
+  },
+  "max_steps": 4,
+  "tools": [
+    {
+      "name": "notice_board_assistant",
+      "function": {
+        "description": "Answers questions about the harbor ferry times, the fish market and the harbor office.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "request": {
+              "type": "string",
+              "description": "The question in plain language."
+            }
+          },
+          "required": [
+            "request"
+          ]
+        }
+      },
+      "instructions": "You are the assistant of the Harbor Notice Board, a small demo partner site of the Agentic Trust Hub. Another site's assistant hands you a visitor's request.\nFacts (the only facts you know):\n- The harbor ferry leaves at 08:00, 12:00 and 17:00 every day. The 17:00 ferry does not run on Mondays.\n- The fish market is open 06:00 to 11:00, Tuesday to Sunday.\n- The harbor office phone line is closed this week for repairs; write to the notice board instead.\nAnswer only from these facts, in one to three short sentences. If the answer is not in the facts, say you do not know.\nReply in the language of the request.",
+      "tools": []
+    }
+  ]
+}

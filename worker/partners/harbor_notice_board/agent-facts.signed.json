@@ -1,0 +1,28 @@
+{
+  "claims": {
+    "schema": "nanda-seal/agent-facts/v1",
+    "spec_profile": "worldwide-agentic-web-mvp-0.3",
+    "site_origin": "https://trust-hub-llm.2738777.workers.dev/harbor_notice_board",
+    "publisher": "Harbor Notice Board",
+    "issued_at": "2026-11-25T01:37:45.122Z",
+    "expires_at": "2026-12-25T01:37:45.122Z",
+    "network_name": "harbor_notice_board",
+    "front_man": "notice_board_assistant",
+    "manifest_sha256": "80a25fc4f96d90eaa43ceba4d5d282a07256665393d9045a3189ba1f52aeaacc",
+    "network_sha256": "b6729030c97ae329a83d282c891365761b45394391aaf55534ba0db6baad4f8e",
+    "peer_policy_mode": "closed",
+    "allowed_peers": [],
+    "key_fingerprint": "sha256:a6fe52a254b6e22e05fa4ecf4911ff3e"
+  },
+  "proof": {
+    "alg": "ES256",
+    "type": "WebCrypto-ECDSA-P256-SHA256",
+    "public_key_jwk": {
+      "kty": "EC",
+      "x": "mYAo-7HFckk-xFd29jaOz8BCewmVtmeQ7iTkuLzT2qU",
+      "y": "_dJ0u9os3piASMyt7LnSoQIHeKsq3OUqPEc_V6FKTCo",
+      "crv": "P-256"
+    },
+    "signature_b64url": "vfPDvRXxvS6b3Q3K0lDnjKfIPEKNet9eRBvW390hfn4o-yKYby1rt03LBtSM2pLSp33AXBK2O8eG6sbAkWl0Ug"
+  }
+}

@@ -6,7 +6,7 @@
 //  1. 只收 POST /v1/chat/completions（OpenAI 格式、串流）；GET /v1/models 只列允許的模型。其他一律 404。
 //  2. 瀏覽器送來的 Authorization 一律丟掉；只用伺服器祕密 OTARI_KEY。訪客自己的金鑰永遠不會送到這裡（runtime 會改走 byok_router）。
 //  3. 只准清單上的網站（ALLOWED_ORIGINS）；只准網路檔寫的模型；請求本體有上限；max_tokens 由這裡定，不信瀏覽器。
-//  4. 只替「萬用插座自己的兩個代理」付錢，而且提示由伺服器組：
+//  4. 只替「萬用插座自己的兩個代理＋插座放行的夥伴代理（港口公告欄）」付錢，而且提示由伺服器組：
 //     瀏覽器送來的系統提示必須和 worke./fixed-prompts.js 一字不差（那份由官方執行程式自己組出來），否則 403；
 //     轉給上游的系統提示和工具定義一律用伺服器那一份；對話只收必要欄位（使用者的話、助手的回覆和工具呼叫、工具結果），
 //     工具呼叫的名字只能是那個代理自己的工具，多的欄位丟掉，長度和則數都有上限；
@@ -177,7 +177,8 @@ export default {
 
     // 只轉送允許的欄位；max_tokens 和 stream 由這裡定
     // 系統提示、工具定義用伺服器那一份；瀏覽器送來的 tools 不看
-    const 轉送 = { model: 本體.model, messages: 對話, stream: true, max_tokens: 規矩.max_tokens, tools: 代理.工具們, tool_choice: "auto" };
+    const 轉送 = { model: 本體.model, messages: 對話, stream: true, max_tokens: 規矩.max_tokens };
+    if (代理.工具們.length) { 轉送.tools = 代理.工具們; 轉送.tool_choice = "auto"; }   // 夥伴代理沒有工具：不送空的工具清單
 
     let 上游回應;
     try {

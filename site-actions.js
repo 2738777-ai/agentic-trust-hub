@@ -69,7 +69,7 @@ class TrustHubActions {
   static overviewAction() {
     return {
       name: "get_hub_overview",
-      description: "Read what the Agentic Trust Hub is: its checkers, its scale and exit codes, the current plain-language law (full text, numbered lines), the five demo agent websites, and links to its live pages, repository and MCP server. Call it before explaining the hub or listing the demo sites.",
+      description: "Read what the Agentic Trust Hub is: its checkers, its scale and exit codes, the current plain-language law (full text, numbered lines), the five demo agent websites, its two partner sites with their links, and links to its live pages, repository and MCP server. Call it before explaining the hub or listing the demo sites.",
       effect: "read",
       inputSchema: { type: "object", properties: {}, additionalProperties: false },
       execute: TrustHubActions.overview,
@@ -92,6 +92,10 @@ class TrustHubActions {
       law_lines: 文字.split("\n").map((t, i) => `${i + 1}: ${t}`).filter((t) => !/^\d+: *$/.test(t)),
       demo_sites: 目錄.filter((v) => DEMO_SITES.includes(v.名)).map((v) => ({ id: v.名, name: v.英文名.replace(/\s+/g, " ").trim(), what_was_done: v.英文說明, signed: v.有簽章 })),
       pages: 頁,
+      partners: [
+        { tool: "harbor_notice_board_harbor_notice_board", name: "Harbor Notice Board", link: "https://trust-hub-llm.2738777.workers.dev/harbor_notice_board/agent-manifest.json", expected: "the hub lets it run (GREEN)" },
+        { tool: "harbor_mirror_harbor_mirror", name: "Harbor Notice Board mirror (poisoned demo partner)", link: "https://trust-hub-llm.2738777.workers.dev/harbor_mirror/agent-manifest.json", expected: "the hub blocks it (DENY): its publisher hid a bad instruction and re-signed it" },
+      ],
       not_on_this_page: "Live scans of other sites, the Claude Code hook and the MCP server run from the repository (see pages).",
     };
   }

@@ -1,0 +1,53 @@
+{
+  "brand": "Harbor Notice Board (demo partner)",
+  "networks": [
+    {
+      "name": "harbor_mirror",
+      "front_man": "notice_board_assistant",
+      "hocon": "./harbor_mirror.network.json",
+      "description": "Harbor ferry times, fish market hours and harbor office notices.",
+      "tags": [
+        "agentified-website",
+        "demo-partner"
+      ],
+      "sample_queries": [
+        "When does the last ferry leave on Monday?"
+      ]
+    }
+  ],
+  "llm_router": {
+    "base_url": "https://api.otari.ai/api/v1",
+    "mock": false,
+    "byok_router": "https://api.otari.ai/api/v1"
+  },
+  "allowed_peers": [],
+  "peer_policy": {
+    "mode": "closed",
+    "deny_origins": [],
+    "note": "Calls no other sites."
+  },
+  "deployment": {
+    "mode": "static",
+    "self_contained_runtime": false,
+    "browser_mock": false,
+    "direct_byok": true,
+    "public_mcp_facade": false
+  },
+  "linking": {
+    "protocol": "nsdeploy-link/v1",
+    "exports": [
+      {
+        "network": "harbor_mirror",
+        "front_man": "notice_board_assistant",
+        "aliases": [
+          "harbor_mirror"
+        ],
+        "url": "harbor_mirror"
+      }
+    ],
+    "imports": [],
+    "link_updates": {
+      "mode": "browser-local"
+    }
+  }
+}
