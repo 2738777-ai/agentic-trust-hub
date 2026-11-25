@@ -116,7 +116,8 @@ export function 安裝閘門(engine, { 載入核心 = () => import(核心網址)
     if (!查.放行) { 回報?.({ 查, 擋下: true, 原因: "法典" }); throw new Error(擋下說明(核, 查)); }
     const session = await 原(ref, chain, parentSpan, sourceManifest);
     // 規矩 6：比指紋
-    if (指紋(session.manifest, session.network.config) !== 查.指紋) {
+    // 兩邊都過同一個 filterConfig（它重複套用結果不變），別的網站用不同版的官方執行程式也比得準
+    if (指紋(session.manifest, filterConfig(session.network.config)) !== 查.指紋) {
       engine.registry.cache.delete(鍵);
       回報?.({ 查, 擋下: true, 原因: "掉包" });
       throw new Error(`Agentic Trust Hub blocked partner network '${名}' at ${new URL(origin).host}: the files the runtime fetched are not the files the hub checked (bait-and-switch). None of its agents ran. 萬用插座擋下：執行程式抓到的和插座檢查的不一樣（掉包）。`);

@@ -28,6 +28,14 @@
 4. 翻譯器看不懂、前後矛盾、寫了尺上沒有的格，一律停下來指出第幾行，不猜。
 5. 每次改法典都自動窮舉所有組合，證明三件事永遠成立：決定一定是最壞的那一格；有工具說「拒」就一定拒；沒見過的代碼一定當最嚴。
 
+### 別的網站一行就能裝上
+
+別人的代理網站只要在開機後加這一行，它的代理叫任何別站之前，都會先經過同一部法典檢查，被擋的別站一個代理都不會跑：
+
+`(await import("https://2738777-ai.github.io/agentic-trust-hub/gate/trust-hub-gate.js")).install(booted.engine);`
+
+本站自己用的就是這一個檔案。說明在 [`gate/README.md`](gate/README.md)。
+
 ### 為什麼要接在一起（實測）
 
 拿官方範例民宿做了 5 個版本，兩個工具在瀏覽器（或命令列）各跑一次：
@@ -139,7 +147,9 @@ The Open Agentic Web lets unknown agents run in your browser. Several community 
 - Adding a checker means adding lines to the law, not code. The translator refuses unknown sentences, contradictions and values not on the scale, and every law change is **exhaustively checked** over all verdict combinations.
 - Measured on five variants of the official guesthouse example: a malicious-but-re-signed network fools the signature check alone; a "harmless" step-limit change only gets *held* by the instruction check alone; combined, both are denied.
 
-Every incoming signal is wrapped in a hash-chained *bubble* at the entry point (provenance + parent link + stamps); a deny verdict cuts the whole causal rope (`side.html`). `views.html` shows the same run record from four angles — attacker (field-level diff, invisible characters highlighted, which checker was fooled), map (animated tampered signals stop where caught), matrix (would a single checker have let it in?) and timeline (bubble swimlanes with causal buckles). Each view only receives the fields registered in `core/視角法典.mjs`, and a guard stops any view that shows a different decision than the record. Red-team self-test (2026-11-22): we attacked our own hub first. Attack #1 (talk a human into pasting a law that maps DENIED to GREEN) passed every existing check, so `core/鬆緊.mjs` now compares old and new laws over every combination: tightening applies at once, any loosened cell (including removing a checker) needs explicit human consent. `node cli/插座.mjs 掃` side-scans ordinary pages with no agent or signature (hidden, same-colour, tiny, off-screen, invisible-character, label-only text; off-site forms; third-party scripts): zero false positives on the clean demo, all six tricks caught on the hacked one. `skill/SKILL.md` teaches any AI to wear the hub; `紅隊工單.md` invites other AIs to attack it. Exit codes: only GREEN is 0 (YELLOW 10, REVIEW 20, DENY 30, error 40). Run `node tests/全部.mjs` (24/24 pass, plus 41 view tests and 20 bubble/tamper tests and Chinese/English law equivalence over every combination). Built for the [Open Agentic Web Challenge](https://cognizant-agenticweb.devpost.com/).
+**One line for other sites:** `(await import("https://2738777-ai.github.io/agentic-trust-hub/gate/trust-hub-gate.js")).install(booted.engine);` puts the same gate in front of every partner site an agentic page calls (see `gate/README.md`).
+
+Every incoming signal is wrapped in a hash-chained *bubble* at the entry point (provenance + parent link + stamps); a deny verdict cuts the whole causal rope (`side.html`). `views.html` shows the same run record from four angles — attacker (field-level diff, invisible characters highlighted, which checker was fooled), map (animated tampered signals stop where caught), matrix (would a single checker have let it in?) and timeline (bubble swimlanes with causal buckles). Each view only receives the fields registered in `core/視角法典.mjs`, and a guard stops any view that shows a different decision than the record. Red-team self-test (2026-11-22): we attacked our own hub first. Attack #1 (talk a human into pasting a law that maps DENIED to GREEN) passed every existing check, so `core/鬆緊.mjs` now compares old and new laws over every combination: tightening applies at once, any loosened cell (including removing a checker) needs explicit human consent. `node cli/插座.mjs 掃` side-scans ordinary pages with no agent or signature (hidden, same-colour, tiny, off-screen, invisible-character, label-only text; off-site forms; third-party scripts): zero false positives on the clean demo, all six tricks caught on the hacked one. `skill/SKILL.md` teaches any AI to wear the hub; `紅隊工單.md` invites other AIs to attack it. Exit codes: only GREEN is 0 (YELLOW 10, REVIEW 20, DENY 30, error 40). Run `node tests/全部.mjs` (35/35 pass, plus 41 view tests and 20 bubble/tamper tests and Chinese/English law equivalence over every combination). Built for the [Open Agentic Web Challenge](https://cognizant-agenticweb.devpost.com/).
 
 ## License
 
