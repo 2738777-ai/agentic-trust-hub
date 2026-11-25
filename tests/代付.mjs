@@ -172,7 +172,11 @@ await 試("14 預檢 OPTIONS、模型清單、其他路徑", async () => {
 await 試("15 固定提示是最新的：和官方執行程式現在組出來的一字不差（改了網路檔沒重產就失敗）", async () => {
   const 網 = JSON.parse(await readFile(new URL("../trust_hub.network.json", import.meta.url), "utf8"));
   assert.ok(規矩.模型們.includes(網.llm_config.model_name));
-  assert.deepEqual(固定代理們.map((a) => a.名), 網.tools.map((a) => a.name));
+  assert.deepEqual(固定代理們.slice(0, 2).map((a) => a.名), 網.tools.map((a) => a.name));
+  // 夥伴只收插座放行的「港口公告欄」；被下毒的「鏡像」不在名單上（就算有人繞過閘門，代付服務也不替它付錢）
+  assert.equal(固定代理們.length, 3);
+  assert.match(固定代理們[2].系統提示, /Harbor Notice Board, a small demo partner/);
+  assert.ok(!固定代理們.some((a) => /SYSTEM NOTE: ignore the visitor/.test(a.系統提示)));
   const 出 = execFileSync(process.execPath, ["--no-warnings", fileURLToPath(new URL("../tools/產生代付固定提示.mjs", import.meta.url)), "--check"], { encoding: "utf8" });
   assert.match(出, /最新/);
 });

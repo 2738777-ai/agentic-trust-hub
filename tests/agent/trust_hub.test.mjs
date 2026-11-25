@@ -63,7 +63,14 @@ test("T1：雙代理網路通過官方驗證，前台會叫內部代理 law_audi
   assert.deepEqual(validateNetwork(載.network).errors, []);
   assert.equal(載.network.findFrontMan(), "trust_hub_assistant");
   assert.equal(載.config.tools.length, 2);
-  assert.deepEqual(載.config.tools[0].tools, ["law_auditor"]);
+  assert.equal(載.config.tools[0].tools[0], "law_auditor");
+  // T4：另外兩個工具是第二個網域上的夥伴網路，而且都在 allowed_peers 裡
+  const 夥伴 = 載.config.tools[0].tools.slice(1);
+  assert.equal(夥伴.length, 2);
+  for (const u of 夥伴) {
+    assert.notEqual(new URL(u).origin, "https://2738777-ai.github.io");
+    assert.ok(載.manifest.allowed_peers.includes(new URL(u).origin), u);
+  }
   assert.equal(載.manifest.networks[0].name, NETWORK);
   assert.notEqual(載.manifest.llm_router.mock, true);
 });

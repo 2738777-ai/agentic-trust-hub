@@ -46,6 +46,19 @@ export class AssistantMount {
       booted.engine.onActionConfirm = AssistantMount.review;
       AssistantMount.defaultConsent = booted.engine.onConsent;
       booted.engine.onConsent = AssistantMount.consent;
+      // 萬用插座跨站閘門（T4）：別站的代理要進來，先過插座。裝不上就不准叫別站（出錯就關門）。
+      try {
+        const 閘門 = await import("./trust-gate.js");
+        AssistantMount.cardAnswer = 閘門.卡片答案;
+        const 法典網址 = new URL("core/法典.en.txt", siteBase).href;
+        閘門.安裝閘門(booted.engine, {
+          讀法典: async () => (await fetch(法典網址, { cache: "no-store" })).text(),
+          pageOrigin: location.origin,
+          回報: AssistantMount.gateReport,
+        });
+      } catch (e) {
+        booted.engine.resolveRemote = async () => { throw new Error("The Agentic Trust Hub gate did not load, so partner sites are off. 萬用插座閘門沒有載入，不叫別站。"); };
+      }
       // Without a key the chat cannot answer yet. This is the same test as the
       // runtime's "API key required" badge in runtime/ui.js.
       // 本站代付（publisher_funded）時不需要金鑰。The site pays when publisher_funded is on.
@@ -135,7 +148,29 @@ export class AssistantMount {
     const decision = await answer;
     // Answering the card removes its buttons, so focus may fall to the page body.
     AssistantMount.keepFocusInChat();
-    return decision;
+    // 萬用插座：卡片只准三種答案，其他（空的、拼錯）一律當拒絕。官方把沒回答當允許。
+    return AssistantMount.cardAnswer(decision);
+  }
+
+  /** 卡片答案在閘門載入前的保守預設：只有明確的允許才算。 */
+  static cardAnswer(d) { return d === "allow" || d === "always" ? d : "decline"; }
+
+  /**
+   * 萬用插座閘門每判一次，就在狀態列寫一行，讓訪客看得到（T7：擋下要看得到）。
+   */
+  static gateReport(r) {
+    const status = document.querySelector("#assistant-status");
+    if (!status) return;
+    const host = (() => { try { return new URL(r.查?.來源 ?? r.來源).host; } catch { return "partner"; } })();
+    const 名 = r.查?.網路名 ?? r.網路名;
+    const 格 = { 綠: "GREEN", 黃: "YELLOW", 待審: "REVIEW", 拒: "DENY" }[r.查?.決定] ?? "DENY";
+    status.textContent = !r.擋下
+      ? `萬用插座：夥伴 ${名}（${host}）判 ${格}，放行。Trust hub: partner ${名} at ${host} is ${格}; allowed to run.`
+      : r.原因 === "掉包"
+        ? `萬用插座：夥伴 ${名}（${host}）檢查的和要跑的不一樣（掉包），擋下。Trust hub blocked ${名}: bait-and-switch.`
+        : r.原因 === "讀不到"
+          ? `萬用插座：讀不到夥伴 ${名}（${host}），擋下。Trust hub could not check ${名}, so it was blocked.`
+          : `萬用插座：夥伴 ${名}（${host}）判 ${格}，擋下，它的代理一個都沒跑。Trust hub blocked ${名} (${格}); none of its agents ran.`;
   }
 
   /**

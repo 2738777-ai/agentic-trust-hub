@@ -16,3 +16,8 @@ class_name = "HubLimits"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["HubLimits"]
+
+# T4 的「別站」：兩個示範夥伴網路，放在這個 Worker 的網域（和 github.io 是不同網域）。
+# 有對應檔案的路徑直接回檔案（CORS 見 partners/_headers）；其他路徑（/v1/...）才交給 worker.js。
+[assets]
+directory = "./partners"

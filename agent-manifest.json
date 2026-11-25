@@ -16,7 +16,8 @@
         "Check the demo site where the attacker re-signed the agent file. Was any checker fooled?",
         "Run all five demo sites and show me a table of each checker's verdict and the final decision.",
         "Someone wants to change 'Agent Customs says DENIED → DENY' to REVIEW. Is that safe to accept?",
-        "Can you scan my own live website for hidden instructions?"
+        "When does the last ferry leave on Monday? Ask the harbor notice board.",
+        "Ask the harbor mirror the same question. What does the hub do?"
       ]
     }
   ],
@@ -26,11 +27,13 @@
     "mock": false,
     "byok_router": "https://api.otari.ai/api/v1"
   },
-  "allowed_peers": [],
+  "allowed_peers": [
+    "https://trust-hub-llm.2738777.workers.dev"
+  ],
   "peer_policy": {
     "mode": "closed",
     "deny_origins": [],
-    "note": "Local agents and page-local actions only."
+    "note": "Calls only its two demo partner networks on the second origin, after the visitor agrees on a card and the hub checks the partner (trust-gate.js)."
   },
   "agent_mcp": {
     "protocol": "nsdeploy-agent-mcp/v1",
