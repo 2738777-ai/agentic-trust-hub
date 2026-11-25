@@ -55,6 +55,13 @@ export class AssistantMount {
           讀法典: async () => (await fetch(法典網址, { cache: "no-store" })).text(),
           pageOrigin: location.origin,
           回報: AssistantMount.gateReport,
+          // T6：私有資料按目的地點名。只有港口公告欄可以收到訪客的語言；鏡像什麼都拿不到（它也會被擋下）。
+          私有資料白名單: { "https://trust-hub-llm.2738777.workers.dev/harbor_notice_board/harbor_notice_board": ["visitor_language"] },
+        });
+        // T6 示範用的私有資料：訪客瀏覽器的語言（官方介面本來就帶 backend_token 這個不准外送的示範欄位）
+        const 原stream = booted.engine.streamTurn.bind(booted.engine);
+        booted.engine.streamTurn = (text, 選項 = {}) => 原stream(text, {
+          ...選項, slyData: { ...(選項.slyData || {}), visitor_language: navigator.language || "" },
         });
       } catch (e) {
         booted.engine.resolveRemote = async () => { throw new Error("The Agentic Trust Hub gate did not load, so partner sites are off. 萬用插座閘門沒有載入，不叫別站。"); };
@@ -164,8 +171,11 @@ export class AssistantMount {
     const host = (() => { try { return new URL(r.查?.來源 ?? r.來源).host; } catch { return "partner"; } })();
     const 名 = r.查?.網路名 ?? r.網路名;
     const 格 = { 綠: "GREEN", 黃: "YELLOW", 待審: "REVIEW", 拒: "DENY" }[r.查?.決定] ?? "DENY";
+    const 私 = r.私有資料
+      ? ` 私有資料：只送出 ${r.私有資料.送出.join("、") || "（無）"}，其他一律留在這裡。Private context sent: ${r.私有資料.送出.join(", ") || "none"}; everything else stays here.`
+      : "";
     status.textContent = !r.擋下
-      ? `萬用插座：夥伴 ${名}（${host}）判 ${格}，放行。Trust hub: partner ${名} at ${host} is ${格}; allowed to run.`
+      ? `萬用插座：夥伴 ${名}（${host}）判 ${格}，放行。Trust hub: partner ${名} at ${host} is ${格}; allowed to run.${私}`
       : r.原因 === "掉包"
         ? `萬用插座：夥伴 ${名}（${host}）檢查的和要跑的不一樣（掉包），擋下。Trust hub blocked ${名}: bait-and-switch.`
         : r.原因 === "讀不到"

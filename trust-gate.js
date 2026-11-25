@@ -14,6 +14,9 @@
 //           不一樣就擋下（防「先給檢查的人看好的，執行時換壞的」）。
 //   規矩 7  擋下的網路不留在快取；只有放行過、指紋相同的才准從快取再用。
 //   規矩 8  閘門自己出錯＝讀不到＝擋下。
+//   規矩 9  私有資料按目的地點名（T6，規格「Destination-scoped private-context policies」）：
+//           官方只照「我方代理」的 allow.to_downstream 篩一次，同一張清單對所有別站都一樣；
+//           插座再按「目的地網路」點名一次，兩張清單都有的欄位才送出，其他一律拿掉。
 //
 // 這裡不寫任何判定規則：判定交給 web/核心包.js 和 core/法典.en.txt（和試打台、命令列同一份）。
 import { parseHocon } from "./runtime/hocon.js";
@@ -85,7 +88,7 @@ export function 擋下說明(核, 查) {
  * 裝上閘門：包住 engine.resolveRemote（規矩 2）。onConsent 另由 site.js 用「卡片答案」包住（規矩 1）。
  * :param 回報: 每次判定後呼叫 ({查, 擋下, 原因})，給畫面顯示。
  */
-export function 安裝閘門(engine, { 載入核心 = () => import(核心網址), 讀法典, 底fetch, pageOrigin, 回報 } = {}) {
+export function 安裝閘門(engine, { 載入核心 = () => import(核心網址), 讀法典, 底fetch, pageOrigin, 回報, 私有資料白名單 = {} } = {}) {
   const 原 = engine.resolveRemote.bind(engine);
   const 已放行 = new Map();                 // 快取鍵 → 指紋（規矩 7）
   engine.resolveRemote = async (ref, chain, parentSpan, sourceManifest) => {
@@ -118,6 +121,15 @@ export function 安裝閘門(engine, { 載入核心 = () => import(核心網址)
       回報?.({ 查, 擋下: true, 原因: "掉包" });
       throw new Error(`Agentic Trust Hub blocked partner network '${名}' at ${new URL(origin).host}: the files the runtime fetched are not the files the hub checked (bait-and-switch). None of its agents ran. 萬用插座擋下：執行程式抓到的和插座檢查的不一樣（掉包）。`);
     }
+    // 規矩 9：這個目的地點名准的私有欄位才送出（裝在放行的那一個 session 上，快取再用時也一樣）
+    const 准 = new Set(私有資料白名單[`${origin}/${名}`] ?? []);
+    const 原invoke = session.invoke.bind(session);
+    session.invoke = (request, 選項) => {
+      const sly = request?.sly_data && typeof request.sly_data === "object" ? request.sly_data : {};
+      const 送 = Object.fromEntries(Object.entries(sly).filter(([k]) => 准.has(k)));
+      回報?.({ 查, 擋下: false, 私有資料: { 送出: Object.keys(送), 拿掉: Object.keys(sly).filter((k) => !准.has(k)) } });
+      return 原invoke({ ...request, sly_data: 送 }, 選項);
+    };
     已放行.set(鍵, 查.指紋);
     回報?.({ 查, 擋下: false });
     return session;
