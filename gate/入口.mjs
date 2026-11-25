@@ -64,10 +64,11 @@ export function install(engine, { law = 預設法典, privateContext = {}, statu
     if (缺.length) throw new Error(`Trust Hub gate does not recognise this runtime (missing: ${缺.join(", ")}).`);
     核.翻譯(law);                                   // 法典讀不懂就不裝（翻譯器會丟錯）
     // 規矩 1：不管 onConsent 是現在設、還是之後才設，答案都先過「只准三種」
+    // 規矩 13：沒有同意卡片＝拒絕
     let 卡片 = engine.onConsent;
     Object.defineProperty(engine, "onConsent", {
       configurable: true, enumerable: true,
-      get: () => (typeof 卡片 === "function" ? async (info) => 卡片答案(await 卡片(info)) : 卡片),
+      get: () => (typeof 卡片 === "function" ? async (info) => 卡片答案(await 卡片(info)) : async () => "decline"),
       set: (v) => { 卡片 = v; },
     });
     安裝閘門(engine, {

@@ -10,13 +10,16 @@
 //     瀏覽器送來的系統提示必須和 worke./fixed-prompts.js 一字不差（那份由官方執行程式自己組出來），否則 403；
 //     轉給上游的系統提示和工具定義一律用伺服器那一份；對話只收必要欄位（使用者的話、助手的回覆和工具呼叫、工具結果），
 //     工具呼叫的名字只能是那個代理自己的工具，多的欄位丟掉，長度和則數都有上限；
-//     工具結果必須對應前面還沒回覆的同名呼叫，每個呼叫 ID 只能出現一次、回覆一次（對話順序）。
+//     工具結果必須對應前面還沒回覆的同名呼叫，每個呼叫 ID 只能出現一次、回覆一次（對話順序）；
+//     工具呼叫全部回覆完之前，不准插進使用者的話，對話也不准停在還沒回覆的呼叫上。
 //     工具結果的「內容是不是真的」這裡驗不了（要可信的執行端給證據）；捏造的結果一樣受額度和餘額封頂。
 //  5. 額度用 Durable Object 原子計數（同一個物件裡讀和寫中間沒有空檔，多人同時聊天也不會多放）：
 //     每個 IP 每天幾次、全站每天幾次。用完回 429、純文字、中英兩句，聊天視窗會原樣顯示。
 //  6. 沒有 OTARI_KEY、或沒綁計數器 LIMITS → 拒絕服務（出事就關門，不會變成「沒有上限」）。
 //  7. 每個回應（包括錯誤）都帶 CORS 標頭，聊天視窗才看得到原因。
 //  8. 真正的花費上限放在 Otari 帳戶本身（帳戶餘額＝硬上限）。這裡的次數限制是第二道。
+//  9. 上限設定（DAILY_CAP、PER_IP_DAILY）必須是 0 或正整數（0＝今天不給免費額度）；打錯（像「1500次」、空白、負數、小數）就關門（503），不會變成沒有上限。
+// 10. 計數器回應的「超過」只能是 null、「全站」、「每IP」三種；其他（空的、拼錯、不是 JSON）一律關門（503）。
 //
 // 老實話：靜態網頁藏不住任何祕密，所以「瀏覽器拿得到的通行證，腳本也拿得到」。
 // 這裡不假裝能分辨人和腳本；擋濫用靠第 4 條（提示和工具由伺服器定，只付本站代理的錢）＋第 5 條（原子額度）＋第 8 條（帳戶餘額）。
@@ -57,6 +60,14 @@ function CORS(來源, env) {
 const 文字回應 = (狀態, 字, 標頭) => new Response(字, { status: 狀態, headers: { ...標頭, "Content-Type": "text/plain; charset=utf-8" } });
 
 // 規矩 4：找出是哪一個本站代理（系統提示一字不差），找不到回 null
+// 規矩 9：上限必須是 0 或正整數；沒設就用預設值；設了但不合格 → NaN（呼叫的地方關門）
+export function 上限值(設定, 預設) {
+  if (設定 == null) return 預設;
+  const 字 = String(設定).trim();
+  return /^(0|[1-9][0-9]*)$/.test(字) ? Number(字) : NaN;
+}
+const 計數答案 = new Set([null, "全站", "每IP"]);
+
 export function 找本站代理(本體) {
   const 系統 = 本體?.messages?.[0];
   if (系統?.role !== "system" || typeof 系統.content !== "string") return null;
@@ -73,6 +84,7 @@ export function 清洗對話(代理, 訊息們) {
   const 見過的ID = new Set(), 等回覆 = new Map();   // id → 工具名
   for (const m of 訊息們.slice(1)) {
     if (m?.role === "user") {
+      if (等回覆.size) return null;          // 工具呼叫還沒回覆完，不准插話
       if (!字(m.content, 規矩.每則上限)) return null;
       乾淨.push({ role: "user", content: m.content });
     } else if (m?.role === "assistant") {
@@ -96,6 +108,7 @@ export function 清洗對話(代理, 訊息們) {
       乾淨.push({ role: "tool", tool_call_id: m.tool_call_id, name: m.name, content: m.content });
     } else return null;                    // 系統提示只能有開頭那一個；其他角色一律不收
   }
+  if (等回覆.size) return null;            // 對話不准停在還沒回覆的工具呼叫上
   return 乾淨;
 }
 
@@ -154,6 +167,11 @@ export default {
     const 對話 = 代理 && 清洗對話(代理, 本體.messages);
     if (!對話) return 文字回應(403, 不是本站, 標頭);
 
+    // 規矩 9：上限設定打錯就關門
+    const 全站上限 = 上限值(env.DAILY_CAP, 規矩.全站每天), 每IP上限 = 上限值(env.PER_IP_DAILY, 規矩.每IP每天);
+    if (!Number.isInteger(全站上限) || !Number.isInteger(每IP上限)) {
+      return 文字回應(503, "The free model's allowance is not set up correctly on this site. Add your own key in ⚙ AI model settings. 本站免費額度的設定有誤，請先填你自己的金鑰。", 標頭);
+    }
     // 原子計數：交給唯一的 Durable Object；它出錯就關門
     let 超過;
     try {
@@ -163,12 +181,13 @@ export default {
         body: JSON.stringify({
           日: new Date().toISOString().slice(0, 10),
           ip: 請求.headers.get("CF-Connecting-IP") ?? "unknown",
-          全站: Number(env.DAILY_CAP ?? 規矩.全站每天),
-          每IP: Number(env.PER_IP_DAILY ?? 規矩.每IP每天),
+          全站: 全站上限,
+          每IP: 每IP上限,
         }),
       });
       if (!r.ok) throw new Error(String(r.status));
       ({ 超過 } = await r.json());
+      if (!計數答案.has(超過)) throw new Error("bad counter answer");    // 規矩 10
     } catch {
       return 文字回應(503, "The free model's allowance counter is not available. Try again, or add your own key in ⚙ AI model settings.", 標頭);
     }

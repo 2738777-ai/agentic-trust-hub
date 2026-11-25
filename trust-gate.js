@@ -18,6 +18,8 @@
 //           官方只照「我方代理」的 allow.to_downstream 篩一次，同一張清單對所有別站都一樣；
 //           插座再按「目的地網路」點名一次，兩張清單都有的欄位才送出，其他一律拿掉。
 //
+//   規矩 10～16 寫在 gate/規矩表.mjs（同名、轉址、加密、沒卡片、撤回動作、REST、各自的白名單），
+//
 // 這裡不寫任何判定規則：判定交給 web/核心包.js 和 core/法典.en.txt（和試打台、命令列同一份）。
 import { parseHocon } from "./runtime/hocon.js";
 import { filterConfig } from "./runtime/kernel.js";
@@ -41,14 +43,37 @@ export function 指紋(manifest, networkConfig) {
   return JSON.stringify(排好({ manifest, network: 網 }));
 }
 
-/** 規矩 4：每個網址只抓一次的 fetch（快照） */
+/** 規矩 12：只准加密連線（本機開發例外） */
+const 本機 = new Set(["localhost", "127.0.0.1", "[::1]"]);
+export function 有加密(網址) {
+  const u = new URL(String(網址));
+  return u.protocol === "https:" || (u.protocol === "http:" && 本機.has(u.hostname));
+}
+function 要加密(網址, 種類) {
+  if (!有加密(網址)) throw new Error(`Agentic Trust Hub blocked ${種類} ${new URL(String(網址)).host}: partners must use https. 萬用插座只准加密連線（https）。`);
+}
+
+/** 規矩 16：別站網路只看它自己描述檔的白名單；使用者臨時連結（runtimeAllowedPeers）只給頂層網路用 */
+function 只看自己的白名單(engine, 目標, sourceManifest) {
+  if (!sourceManifest || sourceManifest === engine.top?.manifest) return;
+  const 暫 = engine.runtimeAllowedPeers;
+  engine.runtimeAllowedPeers = new Set();
+  try { engine._assertAllowedPeer(目標, sourceManifest); }
+  catch (e) { throw new Error(`${e.message} Agentic Trust Hub: a partner network may only contact the sites in its own allowed_peers. 萬用插座：別站網路只能聯絡它自己白名單上的網站。`); }
+  finally { engine.runtimeAllowedPeers = 暫; }
+}
+
+/** 規矩 4：每個網址只抓一次的 fetch（快照）。規矩 11：不跟著轉址 */
 function 快照fetch(底fetch) {
   const 表 = new Map();
   const f = async (網址, 選項) => {
     const 鍵 = new URL(String(網址)).href;
     if (!表.has(鍵)) {
       表.set(鍵, (async () => {
-        const r = await 底fetch(鍵, { ...(選項 || {}), cache: "no-store" });
+        const r = await 底fetch(鍵, { ...(選項 || {}), cache: "no-store", redirect: "manual" });
+        if (r.type === "opaqueredirect" || (r.status >= 300 && r.status < 400)) {
+          throw new Error(`${鍵} answered with a redirect; partner files must not redirect (轉址不准)`);
+        }
         return { 狀態: r.status, 字: await r.text(), 型: r.headers.get("content-type") || "" };
       })());
     }
@@ -68,13 +93,27 @@ export async function 檢查夥伴(origin, 網路名, { 核, 法典文字, 底fe
   const base = origin.replace(/\/$/, "");
   const 描述字 = await 抓.讀(`${base}/agent-manifest.json`);
   const manifest = JSON.parse(描述字);
-  const entry = (manifest.networks || []).find((n) => n.name === 網路名);
+  const 同名網路 = (manifest.networks || []).filter((n) => n.name === 網路名);
+  if (同名網路.length > 1) throw new Error(`${base} publishes ${同名網路.length} networks with the same name '${網路名}' (同名網路)`);   // 規矩 10
+  const entry = 同名網路[0];
   if (!entry) throw new Error(`No published network named '${網路名}' at ${base}.`);
   const 網路網址 = resolveUrl(base, entry.hocon);
   const 讀JSON = async (檔) => JSON.parse(await 抓.讀(new URL(檔, `${base}/`).href));
   const { 結果們, 說明們 } = await 核.全部檢查({ 網路網址, fetchImpl: 抓, pageOrigin: pageOrigin ?? base, 讀JSON, 網路檔名: entry.hocon });
   const { 決定, 理由 } = 核.判定(核.翻譯(法典文字), 結果們);
-  const 網路 = filterConfig(parseHocon(await 抓.讀(網路網址)));
+  const 原網路 = parseHocon(await 抓.讀(網路網址));
+  // 規矩 10：網路裡的代理不准同名
+  const 名字們 = (原網路.tools || []).map((t) => t?.name).filter(Boolean);
+  const 重複 = 名字們.find((n, i) => 名字們.indexOf(n) !== i);
+  if (重複) throw new Error(`two agents in '${網路名}' have the same name '${重複}' (同名代理)`);
+  // 規矩 15：REST 工具只准連回別站自己
+  const 自己 = new URL(`${base}/`).origin;
+  for (const t of 原網路.tools || []) {
+    if (!t?.toolbox || t.args?.url == null) continue;
+    const 去 = new URL(String(t.args.url), `${base}/`).origin;
+    if (去 !== 自己) throw new Error(`REST tool '${t.name}' in '${網路名}' points to ${去}, not the partner's own site (別站的 REST 工具只准連回別站自己)`);
+  }
+  const 網路 = filterConfig(原網路);
   return { 放行: 放行.has(決定), 決定, 理由, 說明們, 指紋: 指紋(manifest, 網路), 網路名, 來源: base };
 }
 
@@ -96,6 +135,8 @@ export function 安裝閘門(engine, { 載入核心 = () => import(核心網址)
     const origin = new URL("./", target).href.replace(/\/$/, "");
     const 名 = target.pathname.split("/").filter(Boolean).pop();
     const 鍵 = engine.registry.cacheKey(origin, 名);
+    要加密(origin, "partner network");                    // 規矩 12：沒加密的連碰都不碰
+    只看自己的白名單(engine, origin, sourceManifest);       // 規矩 16
     // 規矩 3：不准的來源、循環、太深，先用官方的檢查擋，連碰都不碰
     engine._assertAllowedPeer(origin, sourceManifest);
     engine.registry.checkCycle(chain || [], origin, 名);
@@ -119,6 +160,7 @@ export function 安裝閘門(engine, { 載入核心 = () => import(核心網址)
     // 兩邊都過同一個 filterConfig（它重複套用結果不變），別的網站用不同版的官方執行程式也比得準
     if (指紋(session.manifest, filterConfig(session.network.config)) !== 查.指紋) {
       engine.registry.cache.delete(鍵);
+      撤回動作(engine, origin, 名);                          // 規矩 14
       回報?.({ 查, 擋下: true, 原因: "掉包" });
       throw new Error(`Agentic Trust Hub blocked partner network '${名}' at ${new URL(origin).host}: the files the runtime fetched are not the files the hub checked (bait-and-switch). None of its agents ran. 萬用插座擋下：執行程式抓到的和插座檢查的不一樣（掉包）。`);
     }
@@ -135,5 +177,25 @@ export function 安裝閘門(engine, { 載入核心 = () => import(核心網址)
     回報?.({ 查, 擋下: false });
     return session;
   };
+  // 規矩 12、16：MCP 也一樣
+  if (typeof engine.resolveMcp === "function") {
+    const 原MCP = engine.resolveMcp.bind(engine);
+    engine.resolveMcp = async (ref, parentSpan, slyData, sourceManifest) => {
+      const 網址 = new URL(typeof ref === "string" ? ref : ref?.url, `${engine.top.base}/`);
+      要加密(網址, "MCP service");
+      只看自己的白名單(engine, 網址.origin, sourceManifest);
+      return 原MCP(ref, parentSpan, slyData, sourceManifest);
+    };
+  }
   return engine;
+}
+
+/** 規矩 14：撤回一個別站網路登記的網站動作和動作載入紀錄 */
+function 撤回動作(engine, origin, 名) {
+  const 動作 = engine.actions;
+  if (!動作) return;
+  const 前綴 = `${origin.replace(/\/$/, "")}/${encodeURIComponent(名)}#`;
+  for (const ref of [...(動作.entries?.keys?.() ?? [])]) if (ref.startsWith(前綴)) 動作.entries.delete(ref);
+  動作.remoteLoads?.delete(`${origin}::${名}`);
+  動作.onChange?.();
 }
