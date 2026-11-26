@@ -51,8 +51,10 @@ for (const [檔, 名] of [["鬆緊.mjs", "鬆緊測試"], ["側面.mjs", "側面
   catch (e) { 驗(false, `${名}有失敗：\n` + e.stdout); }
 }
 // 4e 代理網站（官方執行程式＋網站動作＋腳本模型）、4f 模型代付服務
-try { execFileSync(process.execPath, ["--test", path.join(根, "tests", "agent", "trust_hub.test.mjs"), path.join(根, "tests", "agent", "trust_gate.test.mjs"), path.join(根, "tests", "agent", "private_context.test.mjs"), path.join(根, "tests", "agent", "gate_bundle.test.mjs")], { encoding: "utf8", stdio: "pipe" }); 驗(true, "代理網站＋跨站閘門＋金鑰與私有資料＋一行閘門測試全部通過（node --test tests/agent/）"); }
+try { execFileSync(process.execPath, ["--test", path.join(根, "tests", "agent", "trust_hub.test.mjs"), path.join(根, "tests", "agent", "trust_gate.test.mjs"), path.join(根, "tests", "agent", "private_context.test.mjs"), path.join(根, "tests", "agent", "gate_bundle.test.mjs"), path.join(根, "tests", "agent", "gate_rules.test.mjs")], { encoding: "utf8", stdio: "pipe" }); 驗(true, "代理網站＋跨站閘門＋金鑰與私有資料＋一行閘門＋規矩表第 10～16 條測試全部通過（node --test tests/agent/）"); }
 catch (e) { 驗(false, "代理網站測試有失敗：\n" + e.stdout); }
+try { const o = execFileSync(process.execPath, [path.join(根, "tests", "版本.mjs")], { encoding: "utf8" }); 驗(true, `版本對齊測試全部通過（${o.trim().split("\n").pop()}）`); }
+catch (e) { 驗(false, "版本對齊測試有失敗（改了檔案要跑 node tools/產生版本指紋.mjs）：\n" + e.stdout); }
 try { const o = execFileSync(process.execPath, [path.join(根, "tests", "代付.mjs")], { encoding: "utf8" }); 驗(true, `代付服務測試全部通過（${o.trim().split("\n").pop()}）`); }
 catch (e) { 驗(false, "代付服務測試有失敗：\n" + e.stdout); }
 // 5 英文法典：和中文法典翻出來的表一模一樣（連行號都一樣），窮舉每一種組合決定也一樣

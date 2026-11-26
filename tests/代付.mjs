@@ -189,5 +189,31 @@ await 試("16 真實的多輪對話（助手叫工具、拿到結果、再叫內
     { role: "tool", tool_call_id: "c2", name: "law_auditor", content: "3 loosened" }] };
   assert.equal((await 服務.fetch(問(多輪), 環境(), {}, 假上游())).status, 200);
 });
+await 試("17 咬人：上限設定打錯（不是 0 或正整數）就關門，不會變成沒有上限（規矩 9）", async () => {
+  for (const 錯值 of [{ DAILY_CAP: "1500次" }, { PER_IP_DAILY: "abc" }, { DAILY_CAP: "-1" }, { PER_IP_DAILY: "2.5" }, { DAILY_CAP: "" }]) {
+    上游紀錄.length = 0;
+    const r = await 服務.fetch(問(好), 環境(錯值), {}, 假上游());
+    assert.equal(r.status, 503, JSON.stringify(錯值));
+    assert.equal(上游紀錄.length, 0, `${JSON.stringify(錯值)}：不該呼叫上游`);
+  }
+  assert.equal((await 服務.fetch(問(好), 環境({ DAILY_CAP: "1500", PER_IP_DAILY: "40" }), {}, 假上游())).status, 200, "正常的設定照樣放行");
+  assert.equal((await 服務.fetch(問(好), 環境({ DAILY_CAP: "0" }), {}, 假上游())).status, 429, "0＝今天不給免費額度：回額度用完，不是設定錯（沙盤推演第 4 幕抓到的）");
+});
+await 試("18 咬人：計數器回了成功、內容卻不是三種答案之一，就關門（規矩 10）", async () => {
+  for (const 回 of [{}, { 超過: "滿了" }, { over: "全站" }, { 超過: 0 }, "not json"]) {
+    上游紀錄.length = 0;
+    const 怪 = { idFromName: (n) => n, get: () => ({ fetch: async () => new Response(typeof 回 === "string" ? 回 : JSON.stringify(回), { status: 200 }) }) };
+    assert.equal((await 服務.fetch(問(好), 環境({ LIMITS: 怪 }), {}, 假上游())).status, 503, JSON.stringify(回));
+    assert.equal(上游紀錄.length, 0);
+  }
+});
+await 試("19 咬人：工具呼叫還沒回覆，就插進使用者的話或直接結束：403，不計數、不呼叫上游（規矩 4 對話順序）", async () => {
+  const 叫 = { role: "assistant", content: null, tool_calls: [{ id: "c1", type: "function", function: { name: "website_check_demo_site", arguments: "{}" } }] };
+  for (const 訊息們 of [[系統, { role: "user", content: "hi" }, 叫, { role: "user", content: "直接插話" }], [系統, { role: "user", content: "hi" }, 叫]]) {
+    上游紀錄.length = 0;
+    assert.equal((await 服務.fetch(問({ ...好, messages: 訊息們 }), 環境(), {}, 假上游())).status, 403);
+    assert.equal(上游紀錄.length, 0);
+  }
+});
 console.log(`\n代付服務：${過} 過、${錯} 錯`);
 process.exitCode = 錯 ? 1 : 0;
