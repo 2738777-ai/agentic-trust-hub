@@ -19,6 +19,7 @@
 //           插座再按「目的地網路」點名一次，兩張清單都有的欄位才送出，其他一律拿掉。
 //
 //   規矩 10～16 寫在 gate/規矩表.mjs（同名、轉址、加密、沒卡片、撤回動作、REST、各自的白名單），
+//           每一條都有測試 tests/agent/gate_rules.test.mjs。
 //
 // 這裡不寫任何判定規則：判定交給 web/核心包.js 和 core/法典.en.txt（和試打台、命令列同一份）。
 import { parseHocon } from "./runtime/hocon.js";

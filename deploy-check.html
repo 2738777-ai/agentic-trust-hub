@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>萬用插座・部署驗收</title>
+<style>
+  body { font-family: system-ui, "Noto Sans TC", sans-serif; margin: 0; padding: 18px; background: #0b1020; color: #e6ebf2; line-height: 1.6; }
+  h1 { font-size: 22px; margin: 0 0 4px; color: #f5d76e; }
+  p.說明 { margin: 0 0 16px; color: #9ad7ff; font-size: 14px; }
+  .列 { border: 1px solid #2b3550; border-radius: 10px; padding: 12px 14px; margin: 10px 0; background: #121a30; }
+  .列 b { font-size: 16px; }
+  .綠 { color: #2ed573; } .紅 { color: #ff4757; } .灰 { color: #9aa8bd; }
+  .總結 { font-size: 18px; font-weight: bold; padding: 14px; border-radius: 10px; margin-top: 14px; }
+  code { font-size: 13px; color: #feca57; }
+  button { font-size: 16px; padding: 10px 16px; border-radius: 8px; border: 0; background: #54a0ff; color: white; margin-top: 12px; }
+  ul { margin: 6px 0 0; padding-left: 20px; font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>萬用插座・部署驗收</h1>
+<p class="說明">比三方的版本指紋：GitHub 主線、網站（GitHub Pages）、代付服務（Cloudflare）。全部一致才綠。</p>
+<div id="主線" class="列"><b>主線</b>：<span class="灰">查詢中…</span></div>
+<div id="網站" class="列"><b>網站</b>：<span class="灰">查詢中…</span></div>
+<div id="代付服務" class="列"><b>代付服務</b>：<span class="灰">查詢中…</span></div>
+<div id="總結" class="總結 灰">查詢中…</div>
+<button onclick="location.reload()">再查一次</button>
+<script type="module">
+const 主線網址 = "https://raw.githubusercontent.com/2738777-ai/agentic-trust-hub/main/";
+const 主線版本網址 = "https://raw.githubusercontent.com/2738777-ai/agentic-trust-hub/main/version.json";
+const 代付網址 = "https://trust-hub-llm.2738777.workers.dev/health";
+const 寫 = (id, html) => { document.querySelector(`#${id} span, #${id} div.內容`)?.remove(); const d = document.createElement("div"); d.className = "內容"; d.innerHTML = html; document.getElementById(id).appendChild(d); };
+const 抓文字 = async (u) => { const r = await fetch(u, { cache: "no-store" }); if (!r.ok) throw new Error(`${r.status}`); return r.text(); };
+const sha = async (buf) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map((b) => b.toString(16).padStart(2, "0")).join("");
+
+let 主網站 = null, 主代付 = null, 站 = null, 代 = null, 站內不符 = [];
+try {
+  主網站 = JSON.parse(await 抓文字(主線版本網址)).總指紋;
+  主代付 = (await 抓文字(主線網址 + "worker/" + encodeURIComponent("版本.js"))).match(/"總指紋":\s*"([0-9a-f]{12})"/)?.[1] ?? null;
+  寫("主線", `網站 <code>${主網站}</code>、代付服務 <code>${主代付}</code><br><span class="灰">GitHub 原始檔會快取約 5 分鐘：剛合併的話等一下再查。</span>`);
+} catch (e) { 寫("主線", `<span class="紅">讀不到主線（${e.message}）</span>`); }
+
+try {
+  const 版 = JSON.parse(await 抓文字("./version.json"));
+  站 = 版.總指紋;
+  for (const [路, 指] of Object.entries(版.檔案)) {
+    try {
+      const r = await fetch("./" + 路.split("/").map(encodeURIComponent).join("/"), { cache: "no-store" });
+      if (!r.ok || (await sha(await r.arrayBuffer())) !== 指) 站內不符.push(路);
+    } catch { 站內不符.push(路); }
+  }
+  寫("網站", `<code>${站}</code>　${站內不符.length ? `<span class="紅">網站上有 ${站內不符.length} 個檔案和 version.json 對不上</span><ul>${站內不符.map((x) => `<li>${x}</li>`).join("")}</ul>` : `<span class="綠">網站上的 ${Object.keys(版.檔案).length} 個檔案都和 version.json 一樣</span>`}`);
+} catch (e) { 寫("網站", `<span class="紅">網站還沒有 version.json（${e.message}）：網站還是加版本指紋之前的舊版</span>`); }
+
+try {
+  代 = JSON.parse(await 抓文字(代付網址)).總指紋;
+  寫("代付服務", `<code>${代}</code>`);
+} catch (e) { 寫("代付服務", `<span class="紅">代付服務沒有 /health（${e.message}）：代付服務還是加版本指紋之前的舊版</span>`); }
+
+const 落後 = [];
+if (!站 || (主網站 && 站 !== 主網站) || 站內不符.length) 落後.push("網站");
+if (!代 || (主代付 && 代 !== 主代付)) 落後.push("代付服務");
+const 總 = document.getElementById("總結");
+if (!主網站) { 總.className = "總結 紅"; 總.textContent = "讀不到主線，沒辦法比對。"; }
+else if (落後.length) { 總.className = "總結 紅"; 總.textContent = `✗ ${落後.join("、")}落後主線：還沒部署成功。`; }
+else { 總.className = "總結 綠"; 總.textContent = "✓ 主線、網站、代付服務三方一致：部署成功。"; }
+</script>
+</body>
+</html>

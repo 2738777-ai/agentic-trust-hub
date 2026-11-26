@@ -25,6 +25,7 @@
 // 這裡不假裝能分辨人和腳本；擋濫用靠第 4 條（提示和工具由伺服器定，只付本站代理的錢）＋第 5 條（原子額度）＋第 8 條（帳戶餘額）。
 // 剩下的風險說清楚：有人照抄本站提示、只換使用者的話，還是能讓「萬用插座助手」回答他；那就由額度和餘額封頂。
 
+import { 版本 } from "./版本.js";
 import { 固定代理們 } from "./fixed-prompts.js";
 
 export const 規矩 = {
@@ -148,6 +149,10 @@ export default {
     const 路 = 網址.pathname.replace(/\/+$/, "");
 
     if (請求.method === "OPTIONS") return new Response(null, { status: 204, headers: 標頭 });
+    // 版本對齊：任何來源都能看，只回指紋；不碰金鑰、不計額度、不收資料（規矩見 tests/版本.mjs）
+    if (請求.method === "GET" && 路 === "/health") {
+      return new Response(JSON.stringify({ 服務: "trust-hub-llm", 總指紋: 版本.總指紋 }), { headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store", "Content-Type": "application/json" } });
+    }
     if (!來源 || !允許來源們(env).includes(來源)) return 文字回應(403, "This model router only serves the Agentic Trust Hub site.", 標頭);
 
     if (請求.method === "GET" && 路 === "/v1/models") {
